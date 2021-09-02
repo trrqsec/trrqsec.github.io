@@ -271,10 +271,13 @@
 <div class="article-content">
     <div id="article" class="content">
         <h1 id="fastjson简介"><a href="#fastjson简介" class="headerlink" title="fastjson简介"></a>fastjson简介</h1><p>fastjson是由阿里巴巴工程师基于JAVA开发的一款JSON解析器和生成器，可用于将Java对象转换为其JSON表示形式。它还可以用于将JSON字符串转换为等效的Java对象。</p>
-<h1 id="漏洞原理"><a href="#漏洞原理" class="headerlink" title="漏洞原理"></a>漏洞原理</h1><p>漏洞原因：<br>&emsp;&emsp;lookup函数中参数可控，可以指向攻击者服务器，实现JNDI注入实现任意代码执行</br><br><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/fastjson%E5%8E%9F%E7%90%86.png" alt="fastjson" width="400" height="600" align="bottom" /></p>
+<h1 id="漏洞原理"><a href="#漏洞原理" class="headerlink" title="漏洞原理"></a>漏洞原理</h1><p>漏洞原因：<br>&emsp;&emsp;lookup函数中参数可控，可以指向攻击者服务器，实现JNDI注入实现任意代码执行</br></p>
+<img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/fastjson%E5%8E%9F%E7%90%86.png" alt="fastjson" width="400" height="600" align="bottom" />
+
 </br>
 
-
+<p>利用方法：</p>
+<p>&emsp;&emsp;1.首先开启HTTP服务器，并将我们的恶意类放在目录下<br>&emsp;&emsp;2.开启恶意RMI服务器<br>&emsp;&emsp;3.攻击者控制url参数为上一步开启的恶意RMI服务器地址<br>&emsp;&emsp;4.恶意RMI服务器返回ReferenceWrapper类<br>&emsp;&emsp;5.目标（JNDI_Client）在执行lookup操作的时候，在decodeObject中将ReferenceWrapper变成Reference类，然后远程加载并实例化我们的Factory类（即远程加载我们HTTP服务器上的恶意类），在实例化时触发静态代码片段中的恶意代码</br></p>
 <h1 id="复现详情"><a href="#复现详情" class="headerlink" title="复现详情"></a>复现详情</h1><h2 id="靶场搭建"><a href="#靶场搭建" class="headerlink" title="靶场搭建"></a>靶场搭建</h2><p>靶场说明：</p>
 <p>ubuntu20.04.2</p>
 <p>fastjson1.2.47</p>

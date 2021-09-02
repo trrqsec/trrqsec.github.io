@@ -278,7 +278,7 @@
 <p>Shiro框架提供了记住密码的功能，用户登录成功会生成加密编码的cookie，在服务端对rememberMe的cookie，先进行了base64解码，然后AES解码后再反序列化</p>
 <p>所以说，如果我们要构造payload，首先需要对我们执行的指令进行序列化，让服务端进行反序列化执行我们的指令</p>
 <p>序列化构造poc过程：</p>
-<p>指令-&gt;序列号-&gt;AES加密-&gt;base64编码-&gt;rememberMe cookie</p>
+<p>指令-&gt;序列化-&gt;AES加密-&gt;base64编码-&gt;rememberMe cookie</p>
 <p>首先利用条件就是我们需要知道AES的iv密钥，所以我们可以使用默认的或者是暴力破解来尝试</p>
 </br>
 
@@ -424,6 +424,13 @@
     $(function () { $('#article').click(function (e) { if (e.target.tagName == "IMG") { if ($('#nonediv').length == 0) { let MImg = `<div id='noneimg'><img src='${e.target.currentSrc}'></div>`; let MDiv = "<div id='nonediv' style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'></div>"; $('#article').append(MDiv); $('#article').append(MImg); $("#nonediv").fadeIn("slow"); $("#noneimg img").fadeIn("slow") } } else { if ($('#nonediv').length !== 0) { $("#noneimg ").fadeOut("slow"); $("#nonediv").fadeOut("slow"); setTimeout(function () { $('#nonediv').remove(); $('#noneimg').remove() }, 500) } } }); $('.article-content').addClass('content-move') });
 </script>
 <div class="Last-Next">
+    
+    <a href="/2021/09/02/Logger-%E6%8F%92%E4%BB%B6%E4%BD%BF%E7%94%A8%E4%B8%8E%E6%8A%80%E5%B7%A7/">
+        <div class="last">
+            <span>上一篇</span>
+            <p>Logger++插件使用与技巧</p>
+        </div>
+    </a>
     
 
     
