@@ -283,11 +283,15 @@
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210902165303.png"></p>
 <p>我们可以使用正则表达式来筛选</p>
 <p>这里是筛选返回包的内容，我们也可以筛选Header，也可以筛选请求包：Request.Body</p>
+<p>有多种字段，常见的是Header、Length、Title、Content、Body、Query等，可以看到是我们上面这个图的字段都可以作为正则来筛选</p>
 <figure class="highlight taggerscript"><table><tr><td class="code"><pre><code class="hljs taggerscript">Response.Body == /(([A-Za-z0-9_<span class="hljs-symbol">\-</span><span class="hljs-symbol">\.</span>])+<span class="hljs-symbol">\@</span>([A-Za-z0-9_<span class="hljs-symbol">\-</span><span class="hljs-symbol">\.</span>])+<span class="hljs-symbol">\.</span>([A-Za-z]&#123;2,4&#125;))/<br>Response.header == /(([A-Za-z0-9_<span class="hljs-symbol">\-</span><span class="hljs-symbol">\.</span>])+<span class="hljs-symbol">\@</span>([A-Za-z0-9_<span class="hljs-symbol">\-</span><span class="hljs-symbol">\.</span>])+<span class="hljs-symbol">\.</span>([A-Za-z]&#123;2,4&#125;))/<br>Request.Body == /(<span class="hljs-symbol">\w</span>+<span class="hljs-symbol">\.</span>)&#123;2&#125;<span class="hljs-symbol">\w</span>+/<br>Request.header == /(<span class="hljs-symbol">\w</span>+<span class="hljs-symbol">\.</span>)&#123;2&#125;<span class="hljs-symbol">\w</span>+/<br></code></pre></td></tr></table></figure>
 
+<p>从导出的位置可以看到允许筛选的字段</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210902215546.png"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210902215435.png"></p>
 </br>
 
-<p>我们可以在返回包的地方查找正则，方便我们筛选后再次找到数据包筛选字符的位置</p>
+<p>我们可以在返回包的地方查找正则，方便我们筛选后再次找到数据包筛选字符的位置，返回包的正则不需要前后两个反斜杠</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210902165822.png"></p>
 </br>
 
@@ -329,6 +333,13 @@
     $(function () { $('#article').click(function (e) { if (e.target.tagName == "IMG") { if ($('#nonediv').length == 0) { let MImg = `<div id='noneimg'><img src='${e.target.currentSrc}'></div>`; let MDiv = "<div id='nonediv' style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'></div>"; $('#article').append(MDiv); $('#article').append(MImg); $("#nonediv").fadeIn("slow"); $("#noneimg img").fadeIn("slow") } } else { if ($('#nonediv').length !== 0) { $("#noneimg ").fadeOut("slow"); $("#nonediv").fadeOut("slow"); setTimeout(function () { $('#nonediv').remove(); $('#noneimg').remove() }, 500) } } }); $('.article-content').addClass('content-move') });
 </script>
 <div class="Last-Next">
+    
+    <a href="/2021/09/04/Cors%E8%B7%A8%E5%9F%9F%E6%8C%96%E6%8E%98%E4%B8%8E%E5%88%A9%E7%94%A8/">
+        <div class="last">
+            <span>上一篇</span>
+            <p>Cors跨域挖掘与利用</p>
+        </div>
+    </a>
     
 
     
