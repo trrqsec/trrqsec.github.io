@@ -338,8 +338,6 @@
 <p>该字段可选。它的值是一个布尔值，表示<strong>是否允许发送Cookie</strong>。默认情况下，Cookie不包括在CORS请求之中。设为<code>true</code>，即表示服务器明确许可，Cookie可以包含在请求中，一起发给服务器。这个值也只能设为<code>true</code>，如果服务器不要浏览器发送Cookie，删除该字段即可。</p>
 <p><strong>3）Access-Control-Expose-Headers</strong></p>
 <p>该字段可选。CORS请求时，<code>XMLHttpRequest</code>对象的<code>getResponseHeader()</code>方法只能拿到6个基本字段：<code>Cache-Control</code>、<code>Content-Language</code>、<code>Content-Type</code>、<code>Expires</code>、<code>Last-Modified</code>、<code>Pragma</code>。如果想拿到其他字段，就必须在<code>Access-Control-Expose-Headers</code>里面指定。上面的例子指定，<code>getResponseHeader(&#39;FooBar&#39;)</code>可以返回<code>FooBar</code>字段的值。</p>
-</br>
-
 <p><strong>4）WithCredentials</strong></p>
 <p>CORS请求默认不发送Cookie和HTTP认证信息。如果要把Cookie发到服务器，一方面要服务器同意，指定<code>Access-Control-Allow-Credentials</code>字段</p>
 <figure class="highlight ada"><table><tr><td class="code"><pre><code class="hljs ada"><span class="hljs-keyword">Access</span>-Control-Allow-Credentials: <span class="hljs-literal">true</span><br></code></pre></td></tr></table></figure>
@@ -404,11 +402,11 @@
 
 </br>
 
-<h2 id="靶场演练"><a href="#靶场演练" class="headerlink" title="靶场演练"></a>靶场演练</h2><p><a target="_blank" rel="noopener" href="https://github.com/0verSp4ce/DoraBox">https://github.com/0verSp4ce/DoraBox</a></p>
+<h1 id="靶场演练"><a href="#靶场演练" class="headerlink" title="靶场演练"></a>靶场演练</h1><p><a target="_blank" rel="noopener" href="https://github.com/0verSp4ce/DoraBox">https://github.com/0verSp4ce/DoraBox</a></p>
 <p>下载后修改config.php的数据库密码，并且创建pentest导入source xxx.sql文件</p>
-<p><img src="C:\Users\Admin\AppData\Roaming\Typora\typora-user-images\image-20210904203829925.png" alt="image-20210904203829925"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210904210022.png"></p>
 <p>访问是一串user的信息</p>
-<p><img src="C:\Users\Admin\AppData\Roaming\Typora\typora-user-images\image-20210904203938548.png" alt="image-20210904203938548"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210904210046.png"></p>
 <p>测试是否存在跨域漏洞</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/cors1.png"></p>
 <p>用另一台虚拟机构造poc进行访问</p>
