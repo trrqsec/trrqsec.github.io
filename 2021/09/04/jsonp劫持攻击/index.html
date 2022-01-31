@@ -292,7 +292,7 @@
 <p>jquery也可以来获取接口</p>
 <figure class="highlight html"><table><tr><td class="code"><pre><code class="hljs html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span><br>   <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>JSONP 实例<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span><br>   <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;http://apps.bdimg.com/libs/jquery/1.8.3/jquery.js&quot;</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">&quot;external nofollow&quot;</span> &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span> <br><span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;divCustomers&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript"></span><br><span class="javascript">$.getJSON(<span class="hljs-string">&quot;/try/ajax/jsonp.php?jsoncallback=?&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">data</span>) </span>&#123;</span><br><span class="javascript">   </span><br><span class="javascript">  <span class="hljs-keyword">var</span> html = <span class="hljs-string">&#x27;&lt;ul&gt;&#x27;</span>;</span><br><span class="javascript">    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; data.length; i++)&#123;</span><br><span class="javascript">       html += <span class="hljs-string">&#x27;&lt;li&gt;&#x27;</span> + data[i] + <span class="hljs-string">&#x27;&lt;/li&gt;&#x27;</span>;</span><br><span class="javascript">    &#125;</span><br><span class="javascript">  html += <span class="hljs-string">&#x27;&lt;/ul&gt;&#x27;</span>;</span><br><span class="javascript">  $(<span class="hljs-string">&#x27;#divCustomers&#x27;</span>).html(html); </span><br><span class="javascript">&#125;);</span><br><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span> <br></code></pre></td></tr></table></figure>
 
-
+</br>
 
 <p><strong>利用条件</strong></p>
 <ul>
@@ -302,8 +302,12 @@
 <li>发送请求的浏览器启用了 JavaScript</li>
 <li>发送请求的浏览器支持 <code>__defineSetter__</code> 方法</li>
 </ul>
+</br>
+
 <p><strong>攻击流程</strong></p>
 <p>用户浏览器上保存了 HTTP 的身份认证信息和相关的cookie缓存<br>用户点击了恶意的链接，此时用户的浏览器会向恶意的网站发送 GET 请求<br>恶意网站响应用户的请求并返回恶意 JavaScript 语句，当用户的浏览器运行这些 JavaScript 语句时，它就会执行这段代码，访问目标网站，并将数据发送给恶意网站<br>恶意网站处理收到的 Json 数据</p>
+</br>
+
 <p><strong>Json劫持攻击</strong></p>
 <p>jsonp 劫持就是攻击者获取了本应该传给网站其他接口的数据。</p>
 <p>存在漏洞站点页面</p>
