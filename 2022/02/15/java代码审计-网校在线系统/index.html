@@ -270,11 +270,12 @@
 </div>
 <div class="article-content">
     <div id="article" class="content">
-        <h1 id="java代码审计-网校在线系统"><a href="#java代码审计-网校在线系统" class="headerlink" title="java代码审计-网校在线系统"></a>java代码审计-网校在线系统</h1><p>首先分析下这个网站使用的是哪些框架组件</p>
+        <h1 id="java代码审计-网校在线系统"><a href="#java代码审计-网校在线系统" class="headerlink" title="java代码审计-网校在线系统"></a>java代码审计-网校在线系统</h1><p>本文章仅供学术研究</p>
+<p>首先分析下这个网站使用的是哪些框架组件</p>
 <h2 id="pom-xml"><a href="#pom-xml" class="headerlink" title="pom.xml"></a>pom.xml</h2><p>通过pom.xml文件可以看得出是一个Spring+Springmvc+mybatis框架<img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220215193049.png"></p>
 </br>
 
-<p>我们可以一个一个组件找版本漏洞也可以使用dependency-check-maven进行组件的安全检测</p>
+<h2 id="dependency-check-maven"><a href="#dependency-check-maven" class="headerlink" title="dependency-check-maven"></a>dependency-check-maven</h2><p>我们可以一个一个组件找版本漏洞也可以使用dependency-check-maven进行组件的安全检测</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220215201157.png"></p>
 </br>
 
@@ -300,7 +301,7 @@
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220215204335.png"></p>
 </br>
 
-<p>通过搜索@RequestMapping，发现/webapp不在拦截的范围</p>
+<p>通过搜索@RequestMapping，发现/webapp不在拦截的范围，也可以使用正则表达式：@(.*?)Mapping\(</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220215204631.png"></p>
 <p>仔细看了下这些控制器大部分是app前端的显示并无意义，有用的是下面的video可以用来上传影片</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220215205044.png"></p>
@@ -312,7 +313,11 @@
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220215205204.png"></p>
 </br>
 
-<h2 id="SQL"><a href="#SQL" class="headerlink" title="SQL"></a>SQL</h2><p>首先我们知道该持久层框架是mybatis，我们重点搜索的就是带${的xml文件</p>
+<h2 id="网站目录结构"><a href="#网站目录结构" class="headerlink" title="网站目录结构"></a>网站目录结构</h2><p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220220141018.png"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220220141459.png"></p>
+</br>
+
+<h2 id="SQL注入"><a href="#SQL注入" class="headerlink" title="SQL注入"></a>SQL注入</h2><p>首先我们知道该持久层框架是mybatis，我们重点搜索的就是带${的xml文件</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220215213608.png"></p>
 <p>我们接着搜索dao接口</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220215220117.png"></p>
@@ -336,7 +341,7 @@
 </br>
 
 <p>我们找xss存储型可以先去找controller</p>
-<p>通过搜索model.addObject或request.setAttribute，将对象添加到模型中</p>
+<p>通过搜索model.addObject或request.setAttribute，都是将对象添加到view中</p>
 <p>一般找一些list的controller</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220216191500.png"></p>
 <p>找到对应的模型，如果没有路径则是通过setViewName方法来添加路径</p>
@@ -456,6 +461,13 @@
     $(function () { $('#article').click(function (e) { if (e.target.tagName == "IMG") { if ($('#nonediv').length == 0) { let MImg = `<div id='noneimg'><img src='${e.target.currentSrc}'></div>`; let MDiv = "<div id='nonediv' style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'></div>"; $('#article').append(MDiv); $('#article').append(MImg); $("#nonediv").fadeIn("slow"); $("#noneimg img").fadeIn("slow") } } else { if ($('#nonediv').length !== 0) { $("#noneimg ").fadeOut("slow"); $("#nonediv").fadeOut("slow"); setTimeout(function () { $('#nonediv').remove(); $('#noneimg').remove() }, 500) } } }); $('.article-content').addClass('content-move') });
 </script>
 <div class="Last-Next">
+    
+    <a href="/2022/02/18/java%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1-%E5%86%85%E5%AE%B9%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F/">
+        <div class="last">
+            <span>上一篇</span>
+            <p>java代码审计-内容管理系统</p>
+        </div>
+    </a>
     
 
     
