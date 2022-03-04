@@ -360,7 +360,6 @@
 </ul>
 </li>
 </ul>
-<p>基本都会去寻找重写了这个<code>readObject</code>方法的类，并配合Java的<code>invoke</code>反射机制，构造利用链，形成了Java中最具特色的反序列化攻击。而且再看上图中的输出结果，不仅仅触发了<code>readObject</code>方法，还触发了<code>toString()</code>、<code>无参构造</code>、<code>set</code>、<code>get</code>方法，那么在实际寻找利用链的过程中就不仅仅需要关注<code>readObject()</code>的方法了。</p>
 
     </div>
 </div>
@@ -389,6 +388,13 @@
     $(function () { $('#article').click(function (e) { if (e.target.tagName == "IMG") { if ($('#nonediv').length == 0) { let MImg = `<div id='noneimg'><img src='${e.target.currentSrc}'></div>`; let MDiv = "<div id='nonediv' style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'></div>"; $('#article').append(MDiv); $('#article').append(MImg); $("#nonediv").fadeIn("slow"); $("#noneimg img").fadeIn("slow") } } else { if ($('#nonediv').length !== 0) { $("#noneimg ").fadeOut("slow"); $("#nonediv").fadeOut("slow"); setTimeout(function () { $('#nonediv').remove(); $('#noneimg').remove() }, 500) } } }); $('.article-content').addClass('content-move') });
 </script>
 <div class="Last-Next">
+    
+    <a href="/2022/02/27/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-URLDNS/">
+        <div class="last">
+            <span>上一篇</span>
+            <p>Java反序列化-URLDNS</p>
+        </div>
+    </a>
     
 
     
