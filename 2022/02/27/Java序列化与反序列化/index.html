@@ -298,8 +298,7 @@
 <figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> trrq;<br><br><span class="hljs-keyword">import</span> java.io.File;<br><span class="hljs-keyword">import</span> java.io.FileOutputStream;<br><span class="hljs-keyword">import</span> java.io.ObjectOutputStream;<br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserSerializable</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        User user = <span class="hljs-keyword">new</span> User();<br>        user.setName(<span class="hljs-string">&quot;trrq&quot;</span>);<br><br>        <span class="hljs-comment">//序列化，将对象转化为字节序列</span><br>        serialize(user);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">serialize</span><span class="hljs-params">(User user)</span> <span class="hljs-keyword">throws</span> Exception</span>&#123;<br>        FileOutputStream fout = <span class="hljs-keyword">new</span> FileOutputStream(<span class="hljs-string">&quot;user.ser&quot;</span>);<br>        ObjectOutputStream out = <span class="hljs-keyword">new</span> ObjectOutputStream(fout);<br>        out.writeObject(user);<br>        out.close();<br>        fout.close();<br>        System.out.println(<span class="hljs-string">&quot;序列化完成&quot;</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>运行上面这个序列化程序后，就会生成user.ser文件</p>
-<img src="Java序列化与反序列化.assets/image-20220227111027134.png" alt="image-20220227111027134" style="zoom:50%;" />
-
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310165508.png"></p>
 </br>
 
 <p>我们可以看下这个文件结构，ACED表示魔术头，0005表示版本号</p>
@@ -340,10 +339,12 @@
 <ul>
 <li><p>反序列化入口（source）</p>
 <ul>
-<li><p>Java原生的反序列化，，即通过objectInputStream.readObject()，处理二进制格式的内容得到java对象</p>
+<li>Java原生的反序列化，即通过objectInputStream.readObject()，处理二进制格式的内容得到java对象</li>
+</ul>
 </li>
-<li><p>专有格式的反序列化，列如通过Fastjson、Xstream等第三方库，处理json、xml等格式内容，得到java对象</p>
-</li>
+<li><p>重写 finalize 方法、重写 readObject 方法、InvocationHandler子类的 invoke 方法、重写 equals/hashCode 方法以及指定包下的点如 Closure 的 call/doCall 方法</p>
+<ul>
+<li>专有格式的反序列化，列如通过Fastjson、Xstream等第三方库，处理json、xml等格式内容，得到java对象</li>
 </ul>
 </li>
 <li><p>目标方法（sink）</p>
@@ -351,6 +352,7 @@
 <li>Runtime.exec()直接在目标环境中执行命令</li>
 <li>Method.Invoke()这种需要选择合适的方法和参数，通过反射执行方法</li>
 <li>RMI/JNDI/JRMP等，通过引用远程对象，间接命令执行</li>
+<li>FileInputStream/FileOutputStream 的创建与写出、URLClassLoader 实例化、URL 建立连接等等和一些特定包下的利用点如 PyCode 等</li>
 </ul>
 </li>
 <li><p>利用链（gadget chain）</p>
