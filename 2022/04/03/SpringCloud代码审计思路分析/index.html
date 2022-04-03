@@ -291,13 +291,13 @@
 <p><strong>单体项目与微服务的区别</strong></p>
 <p>我们简单分析下</p>
 <p>单体项目：</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403103202.png"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403111313.png"></p>
 <p>微服务：</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403103250.png"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403111329.png"></p>
 </br>
 
 <p>可以很明显看出微服务将每个功能点或者是业务合并在一个子模块中</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403103458.png"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403111348.png"></p>
 <p>并且有独立的pom文件</p>
 <p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403103441.png"></p>
 <p>有独立的配置文件，并且每个服务模块的端口是不一样的</p>
@@ -305,15 +305,15 @@
 </br>
 
 <h2 id="审计思路"><a href="#审计思路" class="headerlink" title="审计思路"></a>审计思路</h2><p>分析大体目录</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403104215.png"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403111404.png"></p>
 </br>
 
 <h3 id="pom-xml"><a href="#pom-xml" class="headerlink" title="pom.xml"></a>pom.xml</h3><p>首先每个服务都有自己的pom文件，这肯定是首先进行审计的整个项目的pom</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403103639.png"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403111421.png"></p>
 <p>再去分析子模块下的pom文件</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403103816.png"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403111434.png"></p>
 <p>或者是单独看idea的外部库</p>
-<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403103727.png"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220403111445.png"></p>
 </br>
 
 <h3 id="网关模块"><a href="#网关模块" class="headerlink" title="网关模块"></a>网关模块</h3><p>网关模块是我们的重点分析</p>
